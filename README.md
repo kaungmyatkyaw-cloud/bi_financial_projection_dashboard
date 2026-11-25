@@ -48,3 +48,11 @@ The solution follows a lightweight, decoupled **Batch Export -> Static JSON -> S
 *Break-Even Point (BEP)*: The revenue or unit threshold where total contribution margin equals total fixed costs (Operating Profit / Net Margin = 0).
 
 *Projected Cash / Profit Trajectory*: Period-by-period projections comparing baseline vs. target/scenario performance.
+
+```t
+
+bep_dashboard_github_page/
+├── index.html          # Dashboard UI, chart rendering, and client-side projection logic
+├── data.json           # Generated dataset consumed by the dashboard
+├── export_to_json.py   # Data export and transformation script
+└── README.md           # Project documentation and architecture overview
