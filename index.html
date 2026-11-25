@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Unit Financial Dashboard · BEP & CM% Variants</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink-950:#0B0E14;--ink-900:#12161F;--ink-800:#1A1F2B;--ink-700:#232A39;
+  --ink-600:#2E3646;--ink-500:#3A4356;--ink-400:#4A5468;--ink-300:#6B7690;
+  --ink-200:#9AA3B8;--ink-100:#C9CFDC;
+  --gold-700:#8B6F2E;--gold-600:#B8943F;--gold-500:#D4AF37;--gold-400:#E0C158;
+  --gold-300:#EFD98A;--gold-200:#F6E9B8;--gold-100:#FBF5DE;
+  --champagne:#EAD9A8;--ivory:#FAF6EC;
+  --emerald:#2E8B57;--emerald-light:#4CB07A;--ruby:#B23A48;--ruby-light:#D45A68;
+  --sapphire:#3B6FA0;--sapphire-light:#5B8FC0;--amber:#D98A2B;
+  --teal:#2F7A78;--bronze:#A67C52;
+}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:radial-gradient(1200px 600px at 10% -10%,rgba(212,175,55,.10),transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%,rgba(59,111,160,.10),transparent 55%),
+    linear-gradient(160deg,#0B0E14 0%,#12161F 40%,#0F131B 100%);
+  background-attachment:fixed;color:var(--ivory);min-height:100vh;padding:28px;letter-spacing:.1px;
+}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;padding:22px 28px;
+  background:linear-gradient(135deg,rgba(26,31,43,.85),rgba(18,22,31,.9));
+  border:1px solid rgba(212,175,55,.22);border-radius:16px;
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 20px 50px -20px rgba(0,0,0,.6);position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.7),transparent)}
+.header h1{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;
+  background:linear-gradient(120deg,#FAF6EC 30%,#EAD9A8 60%,#D4AF37 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.header .sub{font-size:12px;color:var(--ink-200);margin-top:6px;font-weight:300}
+.badge{background:linear-gradient(135deg,rgba(212,175,55,.15),rgba(212,175,55,.05));
+  border:1px solid rgba(212,175,55,.4);padding:9px 18px;border-radius:24px;
+  font-size:11px;color:var(--gold-300);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.tabs{display:flex;gap:4px;margin-bottom:26px;background:rgba(18,22,31,.7);padding:6px;border-radius:12px;
+  border:1px solid rgba(212,175,55,.15);width:fit-content}
+.tab{background:0;border:0;color:var(--ink-200);padding:11px 26px;border-radius:8px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.3s;letter-spacing:.5px}
+.tab:hover{background:rgba(212,175,55,.08);color:var(--gold-300)}
+.tab.active{background:linear-gradient(135deg,#B8943F,#D4AF37);color:#0B0E14;font-weight:700;
+  box-shadow:0 4px 16px -4px rgba(212,175,55,.6)}
+.tc{display:none}.tc.active{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:28px}
+.kpi{background:linear-gradient(145deg,rgba(26,31,43,.9),rgba(18,22,31,.95));
+  border:1px solid rgba(212,175,55,.15);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;
+  box-shadow:0 12px 32px -16px rgba(0,0,0,.6);transition:.3s}
+.kpi:hover{transform:translateY(-3px);border-color:rgba(212,175,55,.35)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--ac),transparent)}
+.kpi-l{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--ink-300);font-weight:600;margin-bottom:10px}
+.kpi-v{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:600;color:var(--ac);line-height:1}
+.kpi-s{font-size:11px;color:var(--ink-300);margin-top:8px;font-weight:300}
+.filters{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.fbtn{background:rgba(26,31,43,.6);border:1px solid rgba(212,175,55,.18);color:var(--ink-100);
+  padding:9px 18px;border-radius:20px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;transition:.25s}
+.fbtn:hover{background:rgba(212,175,55,.1);border-color:rgba(212,175,55,.4);color:var(--gold-300)}
+.fbtn.active{background:linear-gradient(135deg,#B8943F,#D4AF37);border-color:transparent;color:#0B0E14;font-weight:700}
+.stitle{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:16px;color:var(--ivory);display:flex;align-items:center;gap:12px}
+.stitle::before{content:'';width:3px;height:22px;background:linear-gradient(180deg,#D4AF37,#8B6F2E);border-radius:2px}
+.stitle-wrap{margin-bottom:16px}.stitle-wrap .stitle{margin-bottom:6px}
+.stitle-sub{font-size:12px;color:var(--ink-300);margin-left:15px;line-height:1.6;max-width:950px;font-weight:300}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:22px;margin-bottom:32px}
+.bcard{background:linear-gradient(160deg,rgba(26,31,43,.92),rgba(18,22,31,.96));
+  border:1px solid rgba(212,175,55,.16);border-radius:16px;padding:22px;
+  box-shadow:0 16px 40px -20px rgba(0,0,0,.7);transition:.3s;position:relative;overflow:hidden}
+.bcard::before{content:'';position:absolute;top:0;left:22px;right:22px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,.35),transparent)}
+.bcard:hover{border-color:rgba(212,175,55,.3)}
+.bcard-h{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.bname{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ivory)}
+.bstatus{font-size:9px;padding:4px 12px;border-radius:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.sn{background:rgba(178,58,72,.15);color:var(--ruby-light);border:1px solid rgba(178,58,72,.4)}
+.sp{background:rgba(46,139,87,.15);color:var(--emerald-light);border:1px solid rgba(46,139,87,.4)}
+.sb{background:rgba(212,175,55,.15);color:var(--gold-300);border:1px solid rgba(212,175,55,.4)}
+.binfo{font-size:11px;color:var(--ink-300);margin-top:5px;font-weight:300}
+.binfo strong{color:var(--gold-400);font-weight:600}
+.toggle-bar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;background:rgba(11,14,20,.6);
+  border:1px solid rgba(212,175,55,.12);border-radius:10px;margin-bottom:12px}
+.toggle-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:14px;
+  border:1px solid rgba(212,175,55,.2);background:rgba(26,31,43,.7);cursor:pointer;
+  font-size:10px;font-weight:600;color:var(--ink-100);transition:all .2s;font-family:inherit;user-select:none}
+.toggle-btn:hover{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.4)}
+.toggle-btn .tdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;border:1.5px solid rgba(255,255,255,.2)}
+.toggle-btn.off{opacity:.35;text-decoration:line-through;color:var(--ink-400)}
+.toggle-btn.off .tdot{opacity:.25}
+.cbox{position:relative;height:340px;margin-bottom:12px}
+.mstats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding-top:14px;border-top:1px solid rgba(212,175,55,.12)}
+.ms{text-align:center}
+.ms-l{font-size:9px;color:var(--ink-300);text-transform:uppercase;letter-spacing:.8px;font-weight:500}
+.ms-v{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;margin-top:3px}
+.panel{background:linear-gradient(160deg,rgba(26,31,43,.9),rgba(18,22,31,.95));
+  border:1px solid rgba(212,175,55,.14);border-radius:16px;padding:24px;margin-bottom:28px;
+  box-shadow:0 16px 40px -22px rgba(0,0,0,.7)}
+.tchart{position:relative;height:320px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:13px 14px;background:linear-gradient(180deg,rgba(18,22,31,.95),rgba(11,14,20,.95));
+  color:var(--gold-300);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;
+  border-bottom:1px solid rgba(212,175,55,.25)}
+th .th-sub{display:block;font-size:9px;text-transform:none;letter-spacing:.2px;font-weight:400;color:var(--ink-300);margin-top:3px;line-height:1.4}
+td{padding:13px 14px;border-bottom:1px solid rgba(212,175,55,.08);color:var(--ink-100)}
+tr:hover td{background:rgba(212,175,55,.04)}
+.neg{color:var(--ruby-light);font-weight:600}.pos{color:var(--emerald-light);font-weight:600}.neu{color:var(--gold-400);font-weight:600}
+.pbar{width:100%;height:5px;background:rgba(212,175,55,.1);border-radius:3px;overflow:hidden;margin-top:5px}
+.pfill{height:100%;border-radius:3px;transition:width .6s}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:18px;padding:14px 18px;
+  background:rgba(11,14,20,.6);border-radius:12px;border:1px solid rgba(212,175,55,.12)}
+.litem{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-100)}
+.ldot{width:10px;height:10px;border-radius:2px}
+.pcard{background:linear-gradient(160deg,rgba(26,31,43,.92),rgba(18,22,31,.96));
+  border:1px solid rgba(212,175,55,.16);border-radius:16px;padding:24px;margin-bottom:24px;
+  box-shadow:0 16px 40px -22px rgba(0,0,0,.7)}
+.pcard-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid rgba(212,175,55,.18)}
+.ptitle{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--ivory)}
+.psub{font-size:11px;color:var(--ink-300);margin-top:3px;font-weight:300}
+.fbox{background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.02));
+  border:1px solid rgba(212,175,55,.25);border-radius:11px;padding:14px 18px;margin-bottom:16px;
+  font-family:'Courier New',monospace;font-size:12px;color:var(--gold-200);display:flex;align-items:center;gap:12px}
+.fbox .fi{font-size:20px;color:var(--gold-400)}
+.ctbl{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px}
+.ctbl th{background:linear-gradient(180deg,rgba(18,22,31,.95),rgba(11,14,20,.95));color:var(--gold-300);
+  padding:10px 11px;font-size:9px;text-transform:uppercase;letter-spacing:1px;text-align:right;font-weight:600;
+  border-bottom:1px solid rgba(212,175,55,.25)}
+.ctbl th:first-child{text-align:left;border-radius:8px 0 0 0}
+.ctbl th:last-child{border-radius:0 8px 0 0}
+.ctbl td{padding:9px 11px;text-align:right;border-bottom:1px solid rgba(212,175,55,.08);font-variant-numeric:tabular-nums;color:var(--ink-100)}
+.ctbl td:first-child{text-align:left;font-weight:600;color:var(--gold-200)}
+.ctbl tr:nth-child(even) td{background:rgba(212,175,55,.03)}
+.ctbl tr.proj td{background:rgba(212,175,55,.07)}
+.ctbl tr.be td{background:linear-gradient(90deg,rgba(46,139,87,.18),rgba(46,139,87,.08))!important;
+  font-weight:700;border-top:1px solid rgba(76,176,122,.6);border-bottom:1px solid rgba(76,176,122,.6)}
+.ctbl tr.be td:first-child::after{content:' ★';color:var(--gold-400)}
+.rbox{background:rgba(11,14,20,.5);border:1px solid rgba(212,175,55,.14);border-radius:12px;padding:16px;margin-top:14px}
+.rtitle{font-size:11px;font-weight:700;color:var(--gold-300);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.ritem{background:rgba(26,31,43,.7);border:1px solid rgba(212,175,55,.14);border-radius:9px;padding:11px 14px;transition:.25s}
+.ritem:hover{border-color:rgba(212,175,55,.35)}
+.ri-l{font-size:9px;color:var(--ink-300);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;font-weight:500}
+.ri-v{font-size:14px;font-weight:700;font-family:'Courier New',monospace;color:var(--gold-200)}
+.ri-s{font-size:10px;color:var(--ink-300);margin-top:3px;font-weight:300}
+.pchart{position:relative;height:230px;margin-top:16px}
+.scards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.scard{background:linear-gradient(145deg,rgba(26,31,43,.9),rgba(18,22,31,.95));
+  border:1px solid rgba(212,175,55,.16);border-radius:12px;padding:16px;text-align:center;transition:.25s}
+.scard:hover{border-color:rgba(212,175,55,.35);transform:translateY(-2px)}
+.sc-l{font-size:9px;color:var(--ink-300);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;font-weight:500}
+.sc-v{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;line-height:1}
+.bealert{border-radius:10px;padding:13px 17px;margin-top:12px;font-size:12px}
+.bealert.warn{background:rgba(178,58,72,.1);border:1px solid rgba(178,58,72,.35);color:var(--ruby-light)}
+.bealert.ok{background:rgba(46,139,87,.1);border:1px solid rgba(46,139,87,.35);color:var(--emerald-light)}
+.bealert.info{background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.35);color:var(--gold-300)}
+.formula-box{background:rgba(11,14,20,.55);border:1px solid rgba(212,175,55,.18);border-left:3px solid #D4AF37;
+  border-radius:10px;padding:14px 18px;margin-top:16px;font-size:11px;line-height:1.7;color:var(--ink-200)}
+.formula-box .fhead{font-size:10px;font-weight:700;color:var(--gold-300);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.formula-box code{background:rgba(212,175,55,.1);padding:2px 6px;border-radius:4px;color:var(--gold-200);font-family:'Courier New',monospace;font-size:11px}
+.formula-box .fline{margin:4px 0;display:flex;gap:8px;align-items:flex-start}
+.formula-box .fline .fkey{color:#EFD98A;font-weight:600;flex-shrink:0;min-width:90px}
+.target-box{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.02));
+  border:1px solid rgba(212,175,55,.35);border-radius:12px;padding:16px 20px;margin-bottom:18px}
+.target-box label{font-size:11px;color:var(--gold-300);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.target-box input{background:rgba(11,14,20,.85);border:1px solid rgba(212,175,55,.4);border-radius:8px;
+  padding:9px 14px;color:var(--ivory);font-family:'Courier New',monospace;font-size:14px;font-weight:600;width:160px;outline:none}
+.target-box input:focus{border-color:#D4AF37;box-shadow:0 0 0 3px rgba(212,175,55,.15)}
+.target-box button{background:linear-gradient(135deg,#B8943F,#D4AF37);border:0;color:#0B0E14;font-weight:700;
+  padding:9px 22px;border-radius:8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;font-family:inherit;transition:.25s}
+.target-box button:hover{transform:translateY(-1px);box-shadow:0 6px 18px -6px rgba(212,175,55,.7)}
+.target-result{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#4CB07A;
+  padding:8px 16px;background:rgba(46,139,87,.12);border:1px solid rgba(46,139,87,.4);border-radius:8px}
+.target-result.neg{color:#D45A68;background:rgba(178,58,72,.1);border-color:rgba(178,58,72,.4)}
+.target-result.neutral{color:#E0C158;background:rgba(212,175,55,.1);border-color:rgba(212,175,55,.4)}
+.varcost-input{background:rgba(11,14,20,.85);border:1px solid rgba(212,175,55,.4);border-radius:6px;
+  padding:5px 8px;color:var(--ivory);font-family:'Courier New',monospace;font-size:12px;font-weight:600;width:60px;outline:none;text-align:center}
+.varcost-input:focus{border-color:#D4AF37;box-shadow:0 0 0 3px rgba(212,175,55,.15)}
+.varcost-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(212,175,55,.06);
+  border:1px solid rgba(212,175,55,.2);border-radius:8px;margin-bottom:12px;font-size:11px;color:var(--gold-300);font-weight:600}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--ink-950)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#8B6F2E,#D4AF37);border-radius:5px;border:2px solid var(--ink-950)}
+@media(max-width:768px){.bgrid{grid-template-columns:1fr}body{padding:14px}.header{flex-direction:column;align-items:flex-start;gap:12px;padding:18px}.header h1{font-size:24px}.tabs{width:100%}.tab{flex:1;text-align:center;padding:10px 14px}}
+</style>
+</head>
+<body>
+<!-- Password Protection Overlay -->
+<div id="login-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#1a1a2e; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family: sans-serif;">
+    <h2>🔒 Restricted Access</h2>
+    <p>Please enter the dashboard password to continue.</p>
+    <input type="password" id="password-input" style="padding:12px; font-size:16px; border-radius:5px; border:none; margin-bottom:15px; text-align:center; width: 250px;">
+    <button onclick="checkPassword()" style="padding:12px 24px; font-size:16px; border-radius:5px; border:none; background:#e94560; color:white; cursor:pointer; font-weight:bold;">Unlock Dashboard</button>
+    <p id="error-msg" style="color:#ff6b6b; display:none; margin-top:15px;">Incorrect password. Please try again.</p>
+</div>
+<div class="header">
+  <div>
+    <h1>Business Unit Financial Dashboard</h1>
+    <div class="sub">Actual Data: Jan–Aug 2026 · 6-Months Projection: Sep 2026 – Feb 2027</div>
+  </div>
+  <div class="badge">📊 Sep 2026</div>
+</div>
+
+<!-- ====== FORM SWITCHER ====== -->
+<div style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap">
+  <div style="font-size:11px;color:var(--ink-300);text-transform:uppercase;letter-spacing:1.2px;font-weight:600">Calculation Form:</div>
+  <div id="formSwitcher" style="display:flex;gap:4px;background:rgba(18,22,31,.7);padding:5px;border-radius:12px;border:1px solid rgba(212,175,55,.15)">
+    <button class="form-btn" data-form="C" style="background:rgba(26,31,43,.7);border:1px solid rgba(212,175,55,.2);color:var(--ink-100);padding:9px 22px;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:.8px;transition:.25s">Scenario 1 (BEP Varient)</button>
+    <button class="form-btn active" data-form="A" style="background:linear-gradient(135deg,#B8943F,#D4AF37);color:#0B0E14;font-weight:700;border:0;padding:9px 22px;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:.8px;transition:.25s">Scenario 2 (Actual)</button>
+    <button class="form-btn" data-form="B" style="background:rgba(26,31,43,.7);border:1px solid rgba(212,175,55,.2);color:var(--ink-100);padding:9px 22px;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;letter-spacing:.8px;transition:.25s">Scenario 3 (Var% Adjust)</button>
+</div>
+  <div id="formHint" style="font-size:11px;color:var(--gold-300);font-weight:500;background:rgba(212,175,55,.1);padding:8px 14px;border-radius:8px;border:1px solid rgba(212,175,55,.25);display:none"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="bep">BEP Analysis</button>
+  <button class="tab" data-tab="pnl">P&L Projection Calculation</button>
+</div>
+
+<div class="tc active" id="tab-bep">
+  <div class="kpis" id="kpiGrid"></div>
+  <div class="filters">
+  </div>
+  <div class="stitle">P&L Trajectory — When Will Each Business Hit Zero?</div>
+  <div class="panel"><div class="tchart"><canvas id="timelineChart"></canvas></div>
+    <div class="formula-box" id="formulaBEP"></div>
+  </div>
+  
+  <div class="stitle-wrap" style="margin-top:32px;">
+    <div class="stitle">🎯 Profit Target Forecaster</div>
+    <div class="stitle-sub">Enter a target monthly profit (in Million MMK) to see which month/year each business will reach it, based on OLS trend projection. Approximate months from current date (Sep 2026) shown.</div>
+  </div>
+  <div class="panel" style="margin-bottom:32px;">
+    <div class="target-box">
+      <label for="targetInput">Target Monthly Profit (M MMK):</label>
+      <input type="number" id="targetInput" value="5" step="0.5" min="0">
+      <button onclick="runTargetForecast()">Calculate Forecast</button>
+    </div>
+    <div id="targetResults" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+  
+  <div class="stitle-wrap" style="margin-top:32px;">
+    <div class="stitle">Marathon Holding — Consolidated Performance</div>
+    <div class="stitle-sub">Default view: Revenue, BEP, Total Cost, P&L. Click legend to reveal COGS, GP1, P&L (DB), Variable Cost, Fixed Cost, GP%, CM%.</div>
+  </div>
+  <div class="panel" style="margin-bottom:32px;">
+    <div style="position:relative;height:420px;"><canvas id="consolidatedChart"></canvas></div>
+    <div class="formula-box" id="consolidatedFormulaBox"></div>
+  </div>
+  
+  <div class="stitle">Business Unit BEP Performance</div>
+  <div style="font-size:11px;color:var(--ink-300);margin:-4px 0 16px 0;font-style:italic;font-weight:300">💡 Default: Revenue, BEP, Total Cost, P&L. Click the pills above each chart to reveal COGS, GP1, P&L (DB), Var Cost, Fix Cost, GP%, CM%.</div>
+  <div class="bgrid" id="businessGrid"></div>
+
+  <div class="stitle-wrap">
+    <div class="stitle">Summary — When Will Each Business Reach P&L = 0?</div>
+    <div class="stitle-sub">
+      <strong style="color:var(--gold-300)">"Month P&L Hits Zero"</strong>: Based on OLS trend projection of actual data, the month when P&L crosses from negative to zero/positive.
+      <span class="pos">Green</span> = already achieved · <span class="neu">Gold</span> = projected in 6M · <span class="neg">Red</span> = not in window.
+    </div>
+  </div>
+  <div class="panel">
+    <table><thead><tr>
+      <th>Business</th>
+      <th>GP%</th>
+      <th>Latest P&L (Calc)<span class="th-sub">Aug-26 calculated</span></th>
+      <th>Latest P&L (DB)<span class="th-sub">Aug-26 reported</span></th>
+      <th>Latest BEP<span class="th-sub">Required revenue</span></th>
+      <th>Rev vs BEP<span class="th-sub">Gap %</span></th>
+      <th>Month P&L Hits Zero<span class="th-sub">OLS projection</span></th>
+      <th>Status</th>
+    </tr></thead><tbody id="sBody"></tbody></table>
+    <div class="formula-box" id="summaryFormulaBox"></div>
+  </div>
+</div>
+
+<div class="tc" id="tab-pnl">
+  <div class="stitle">P&L Projection — Actual Calculation Breakdown</div>
+  <p style="color:var(--ink-300);font-size:12px;margin-bottom:20px;font-weight:300;line-height:1.6">
+    <strong style="color:var(--gold-300)">P&L = GP1 - Fixed Cost - Variable Cost - Other Expenses/Expenses</strong>.
+    Each component projected via OLS regression. DB reported P&L shown for comparison.
+  </p>
+  <div class="scards" id="pnlSummary"></div>
+  <div id="pnlCards"></div>
+</div>
+
+<script>
+
+// --- PASSWORD PROTECTION LOGIC ---
+// Change this to your desired password
+const DASHBOARD_PASSWORD = "MarathonBI2026!"; 
+
+function checkPassword() {
+    const input = document.getElementById('password-input').value;
+    if (input === DASHBOARD_PASSWORD) {
+        document.getElementById('login-overlay').style.display = 'none';
+        sessionStorage.setItem('dashboard_unlocked', 'true');
+        loadDashboardData(); // Load data only after successful unlock
+    } else {
+        document.getElementById('error-msg').style.display = 'block';
+        document.getElementById('password-input').value = '';
+    }
+}
+
+// Allow 'Enter' key to submit password
+document.addEventListener('DOMContentLoaded', () => {
+    const pwdInput = document.getElementById('password-input');
+    if(pwdInput) {
+        pwdInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') checkPassword();
+        });
+        pwdInput.focus();
+    }
+
+    // Check if already unlocked in this browser session
+    if (sessionStorage.getItem('dashboard_unlocked') === 'true') {
+        document.getElementById('login-overlay').style.display = 'none';
+        loadDashboardData();
+    }
+});
+
+// ===== GLOBAL FORM STATE =====
+let CURRENT_FORM = 'A'; // 'A' | 'B' | 'C'
+
+// Per-business variable cost percentage map
+const VAR_PCT_MAP = {
+  'M Kitchen': 20,
+  'M Express': 20,
+  'M Trading': 20,
+  'M Tech': 20,
+  'Shwe Zay (NPT)': 20,
+  'Shwe Zay (KPG)': 20,
+  'Shwe Zay (YGN)': 20
+};
+
+const DEFAULT_VAR_PCT = 20;
+
+// ===== DYNAMIC DATA FROM data.json =====
+let MONTHS_H = [];
+let MONTHS_P = [];
+let ALL_M = [];
+let NH = 0;
+let CURRENT_MONTH_IDX = 0;
+let RAW = {};
+
+async function loadDashboardData() {
+  const res = await fetch('./data.json?t=' + Date.now());
+  if (!res.ok) throw new Error('Failed to load data.json (' + res.status + ')');
+  const payload = await res.json();
+
+  MONTHS_H = payload.months_h || [];
+  MONTHS_P = payload.months_p || [];
+  ALL_M = [...MONTHS_H, ...MONTHS_P];
+  NH = MONTHS_H.length;
+  CURRENT_MONTH_IDX = payload.current_month_idx ?? NH;
+  RAW = payload.raw || {};
+
+  // Per-business VAR_PCT_MAP မှာ data.json ထဲက business unit အသစ်တွေပါ အလိုအလျောက် ရှိစေရန်
+  Object.keys(RAW).forEach((bu) => {
+    if (VAR_PCT_MAP[bu] === undefined) {
+      VAR_PCT_MAP[bu] = DEFAULT_VAR_PCT;
+    }
+  });
+}
+
+// ===== OLS REGRESSION =====
+function ols(y){
+  const n=y.length, x=Array.from({length:n},(_,i)=>i+1);
+  const sx=x.reduce((a,b)=>a+b,0), sy=y.reduce((a,b)=>a+b,0);
+  const sxy=x.reduce((a,xi,i)=>a+xi*y[i],0), sx2=x.reduce((a,xi)=>a+xi*xi,0);
+  const d=n*sx2-sx*sx;
+  const slope=d?((n*sxy-sx*sy)/d):0, intercept=(sy-slope*sx)/n;
+  const my=sy/n;
+  const sst=y.reduce((a,yi)=>a+(yi-my)**2,0);
+  const ssr=y.reduce((a,yi,i)=>a+(yi-(intercept+slope*(i+1)))**2,0);
+  const r2=sst?(1-ssr/sst):0;
+  return {slope,intercept,r2};
+}
+function project(hist,periods=6){
+  const {slope,intercept}=ols(hist);
+  const last=hist.length;
+  return Array.from({length:periods},(_,i)=>intercept+slope*(last+i+1));
+}
+
+// ===== COMPUTE ALL BUSINESS DATA =====
+let BD={};
+let CONS={};
+
+function buildBD(){
+  const bd = {};
+  Object.entries(RAW).forEach(([bu,d])=>{
+    const pnlCalc = d.gp1.map((g,i)=>g + d.fixed[i] + d.variable[i] + d.other[i]);
+    
+    let gpSum=0,gpCount=0;
+    d.rev.forEach((r,i)=>{if(r>0){gpSum+=d.gp1[i]/r;gpCount++;}});
+    const gp=gpCount>0?gpSum/gpCount:0.10;
+    
+    const revP=project(d.rev), gp1P=project(d.gp1), cogsP=project(d.cogs);
+    const fixP=project(d.fixed), varP=project(d.variable), othP=project(d.other);
+    const pnlCalcP=gp1P.map((g,i)=>g+fixP[i]+varP[i]+othP[i]);
+    
+    const allRev=[...d.rev,...revP], allGp1=[...d.gp1,...gp1P];
+    const allFix=[...d.fixed,...fixP], allVar=[...d.variable,...varP];
+    const allOth=[...d.other,...othP];
+    const allPnlCalc=[...pnlCalc,...pnlCalcP];
+    const allCogs=[...d.cogs,...cogsP];
+    const allPnlDB=[...d.pnlDB,...Array(6).fill(null)];
+    
+    const allFixAbs=allFix.map(v=>Math.abs(v));
+    const allVarAbs=allVar.map(v=>Math.abs(v));
+    const allCogsAbs=allCogs.map(v=>Math.abs(v));
+    
+    const allTotalCost=allCogsAbs.map((c,i)=>c+allFixAbs[i]+allVarAbs[i]+(allOth[i]<0?Math.abs(allOth[i]):-allOth[i]));
+    
+    const varPctVal = (VAR_PCT_MAP[bu] !== undefined) ? VAR_PCT_MAP[bu] : DEFAULT_VAR_PCT;
+    const varPct = varPctVal / 100;
+    
+    // ===== CM% with FORM =====
+    const allCM=allRev.map((r,i)=>{
+      if(r<=0) return null;
+      if(CURRENT_FORM === 'B'){
+        // Scenario 3: CM% = (Revenue − COGS − Var × (1 − pct/100)) / Revenue × 100
+        return (r - (allCogsAbs[i] + (allVarAbs[i] * (1 - varPct)))) / r * 100;
+      }
+      return (r-(allCogsAbs[i]+allVarAbs[i]))/r*100;
+    });
+    
+    const allGPpct=allRev.map((r,i)=>{
+      if(r<=0) return null;
+      return (allGp1[i]/r)*100;
+    });
+    
+    const maxRev = Math.max(...allRev.filter(r => r > 0), 0.01);
+    const bepCap = maxRev * 10;
+    
+    // ===== BEP with FORM =====
+    const allBep=allRev.map((r,i)=>{
+      if(allPnlCalc[i] >= 0){
+        return r;
+      }
+      
+      if(CURRENT_FORM === 'C'){
+        const gpPct = allGPpct[i];
+        if(gpPct === null || gpPct <= 0) return null;
+        const totalCost = allTotalCost[i];
+        const cogs = allCogsAbs[i];
+        const bep = (totalCost - cogs) / (gpPct / 100);
+        if(bep > bepCap || !isFinite(bep)) return null;
+        return bep;
+      }
+      
+      const cmPct = allCM[i];
+      if(cmPct === null || cmPct <= 0) return null;
+      
+      let numerator;
+      if(CURRENT_FORM === 'B'){
+        numerator = allFixAbs[i] + (allVarAbs[i] * varPct);
+      } else {
+        numerator = allFixAbs[i];
+      }
+      
+      const bep = numerator / (cmPct / 100);
+      if(bep > bepCap || !isFinite(bep)) return null;
+      return bep;
+    });
+    
+    let beIdx=null,beMonth=null;
+    for(let i=1;i<allPnlCalc.length;i++){
+      if(allPnlCalc[i-1]<0 && allPnlCalc[i]>=0){beIdx=i;beMonth=ALL_M[i];break;}
+    }
+    let beExact=null;
+    if(beIdx!==null){
+      const ratio=Math.abs(allPnlCalc[beIdx-1])/(Math.abs(allPnlCalc[beIdx-1])+allPnlCalc[beIdx]);
+      beExact={idx:beIdx-1+ratio,from:ALL_M[beIdx-1],to:ALL_M[beIdx]};
+    }
+    
+    const li=d.rev.length-1;
+    const latestPnlCalc=pnlCalc[li];
+    const latestPnlDB=d.pnlDB[li];
+    const latestRev=d.rev[li];
+    const latestBep=allBep[li];
+    const gapPct=(latestBep && latestBep>0)?((latestBep-latestRev)/latestRev):0;
+    
+    const regRev=ols(d.rev),regGp1=ols(d.gp1),regFix=ols(d.fixed);
+    const regVar=ols(d.variable),regOth=ols(d.other),regPnl=ols(pnlCalc);
+    const regCogs=ols(d.cogs);
+    
+    const pnlFirst3=pnlCalc.slice(0,3).reduce((a,b)=>a+b,0)/3;
+    const pnlLast3=pnlCalc.slice(-3).reduce((a,b)=>a+b,0)/3;
+    const improving=pnlLast3>pnlFirst3;
+    
+    bd[bu]={gp,raw:d,pnlCalc,pnlCalcP,allRev,allGp1,allFix,allVar,allFixAbs,allVarAbs,allCogsAbs,allOth,
+      allPnlCalc,allPnlDB,allCogs,allBep,allTotalCost,allCM,allGPpct,varPctVal,
+      beIdx,beMonth,beExact,latestPnlCalc,latestPnlDB,latestRev,latestBep,gapPct,
+      reg:{rev:regRev,gp1:regGp1,fix:regFix,var:regVar,oth:regOth,pnl:regPnl,cogs:regCogs},
+      improving,pnlFirst3,pnlLast3};
+  });
+  return bd;
+}
+
+// ===== CONSOLIDATED =====
+function buildConsolidatedFrom(BD){
+  const bus = Object.values(BD);
+  const n = ALL_M.length;
+  const consRev = Array(n).fill(0);
+  const consPnlCalc = Array(n).fill(0);
+  const consTotalCost = Array(n).fill(0);
+  const consPnlDB = Array(n).fill(null);
+  const consGp1 = Array(n).fill(0);
+  const consCogs = Array(n).fill(0);
+  const consVarAbs = Array(n).fill(0);
+  const consFixAbs = Array(n).fill(0);
+  
+  // Sum only the aggregatable quantities (NOT BEP — that needs special treatment)
+  bus.forEach(d => {
+    for(let i=0;i<n;i++){
+      consRev[i] += d.allRev[i] || 0;
+      consPnlCalc[i] += d.allPnlCalc[i] || 0;
+      consTotalCost[i] += d.allTotalCost[i] || 0;
+      consGp1[i] += d.allGp1[i] || 0;
+      consCogs[i] += d.allCogs[i] || 0;
+      consVarAbs[i] += d.allVarAbs[i] || 0;
+      consFixAbs[i] += d.allFixAbs[i] || 0;
+      if(d.allPnlDB[i] !== null && d.allPnlDB[i] !== undefined) {
+        consPnlDB[i] = (consPnlDB[i] || 0) + d.allPnlDB[i];
+      }
+    }
+  });
+  
+  // Consolidated CM% — weighted by revenue
+  let consCM;
+  if (CURRENT_FORM === 'B') {
+    // Sum of (Rev − COGS − Var × (1 − pct/100)) per business, then divide by total revenue
+    const consAdjNum = Array(n).fill(0);
+    bus.forEach(d => {
+      const varPctVal = d.varPctVal / 100;
+      for (let i = 0; i < n; i++) {
+        const rev = d.allRev[i] || 0;
+        const cogs = d.allCogsAbs[i] || 0;
+        const varAbs = d.allVarAbs[i] || 0;
+        if (rev > 0) {
+          consAdjNum[i] += (rev - cogs - (varAbs * (1 - varPctVal)));
+        }
+      }
+    });
+    consCM = consRev.map((r, i) => {
+      if (r <= 0) return null;
+      return (consAdjNum[i] / r) * 100;
+    });
+  } else {
+    consCM = consRev.map((r,i)=>{
+      if(r<=0) return null;
+      return (r-(consCogs[i]+consVarAbs[i]))/r*100;
+    });
+  }
+  
+  const consGPpct = consRev.map((r,i)=>{
+    if(r<=0) return null;
+    return (consGp1[i]/r)*100;
+  });
+  
+  // ===== CONSOLIDATED BEP — Weighted approach (FIX) =====
+  // Instead of Σ(BEP_i), use Σ(Numerator_i) / (Consolidated CM% / 100)
+  const maxRev = Math.max(...consRev.filter(r => r > 0), 0.01);
+  const consBepCap = maxRev * 10;
+  
+  const consBep = consRev.map((r, i) => {
+    if (r <= 0) return null;
+    // Already at or above breakeven →Revenue of BEP
+    if (consPnlCalc[i] >= 0) return r;
+    
+    if (CURRENT_FORM === 'C') {
+      // Scenario 1: BEP = (Total Cost − COGS) / (Consolidated GP% / 100)
+      const gpPct = consGPpct[i];
+      if (gpPct === null || gpPct <= 0) return null;
+      const bep = (consTotalCost[i] - consCogs[i]) / (gpPct / 100);
+      if (bep > consBepCap || !isFinite(bep) || bep < 0) return null;
+      return bep;
+    }
+    
+    // Scenario 2 & B: numerator = Σ per-business numerators; denominator = consolidated CM%
+    const cmPct = consCM[i];
+    if (cmPct === null || cmPct <= 0) return null;
+    
+    let numerator;
+    if (CURRENT_FORM === 'B') {
+      // Scenario 3: Σ (|Fixed|_i + |Var|_i × pct_i/100)
+      numerator = 0;
+      bus.forEach(d => {
+        const varPctVal = d.varPctVal / 100;
+        numerator += (d.allFixAbs[i] || 0) + (d.allVarAbs[i] || 0) * varPctVal;
+      });
+    } else {
+      // Scenario 2: Σ |Fixed Cost|_i
+      numerator = consFixAbs[i];
+    }
+    
+    const bep = numerator / (cmPct / 100);
+    if (bep > consBepCap || !isFinite(bep) || bep < 0) return null;
+    return bep;
+  });
+  
+  let beIdx = null, beMonth = null;
+  for(let i=1;i<n;i++){
+    if(consPnlCalc[i-1] < 0 && consPnlCalc[i] >= 0){ beIdx = i; beMonth = ALL_M[i]; break; }
+  }
+  
+  const li = NH - 1;
+  return {
+    rev: consRev, bep: consBep, pnlCalc: consPnlCalc, totalCost: consTotalCost,
+    pnlDB: consPnlDB, gp1: consGp1, cogs: consCogs, varAbs: consVarAbs,
+    fixAbs: consFixAbs, cm: consCM, gppct: consGPpct, beIdx, beMonth,
+    latestRev: consRev[li], latestBep: consBep[li],
+    latestPnlCalc: consPnlCalc[li], latestPnlDB: consPnlDB[li]
+  };
+}
+
+function rebuildAllData(){
+  BD = buildBD();
+  CONS = buildConsolidatedFrom(BD);
+}
+
+rebuildAllData();
+
+// ===== UPDATE FORMULA BOXES (DYNAMIC) =====
+function updateFormulaBoxes(){
+  const bepBox = document.getElementById('formulaBEP');
+  if(bepBox){
+    let cmFormula, bepFormula, note;
+    if(CURRENT_FORM === 'B'){
+      cmFormula = `= (Revenue − COGS − Var × (1 − pct/100)) / Revenue × 100  ·  pct = per-unit setting`;
+      bepFormula = `= (|Fixed Cost| + |Var Cost| × pct/100) / (CM% / 100)  ·  pct = per-unit setting`;
+      note = `Scenario 3: Each business has its own Var% input (default 20%) · Added to Fixed Cost · Var multiplied by (1 − pct/100) in CM%`;
+    } else if(CURRENT_FORM === 'C'){
+      cmFormula = `= (Revenue − COGS − |Variable Cost|) / Revenue × 100`;
+      bepFormula = `= (Total Cost − COGS) / (GP% / 100)`;
+      note = `Scenario 1: BEP uses Total Cost minus COGS divided by GP%`;
+    } else {
+      cmFormula = `= (Revenue − COGS − |Variable Cost|) / Revenue × 100`;
+      bepFormula = `= |Fixed Cost| / (CM% / 100)`;
+      note = `When CM% ≤ 0, breakeven is not achievable (BEP = N/A)`;
+    }
+    bepBox.innerHTML = `
+      <div class="fhead">📐 Formula &amp; Explanation — Scenario ${CURRENT_FORM === 'A' ? '2' : CURRENT_FORM === 'B' ? '3' : '1'}</div>
+      <div class="fline"><span class="fkey">P&L (Calc)</span><span>= GP1 - Fixed Cost - Variable Cost - Other Expenses/Expenses</span></div>
+      <div class="fline"><span class="fkey">GP1</span><span>= Revenue − COGS</span></div>
+      <div class="fline"><span class="fkey">GP%</span><span>= (GP1 / Revenue) × 100  ·  Average across months with Revenue &gt; 0</span></div>
+      <div class="fline"><span class="fkey">CM%</span><span>${cmFormula}</span></div>
+      <div class="fline"><span class="fkey">BEP</span><span>${bepFormula}  ·  When P&L = 0,Revenue of BEP</span></div>
+      <div class="fline"><span class="fkey">Note</span><span>${note}</span></div>
+      <div class="fline"><span class="fkey">Projection</span><span>Each component projected via OLS regression (y = slope·x + intercept) on 8 months actual data. R² measures fit quality.</span></div>
+    `;
+  }
+  
+  const consBox = document.getElementById('consolidatedFormulaBox');
+  if(consBox){
+    let consCM_str, consBEP_str;
+    if(CURRENT_FORM === 'B'){
+      consCM_str = `Σ (Rev − COGS − Var × (1 − pct/100)) / Σ Rev × 100  ·  per-unit pct`;
+      consBEP_str = `Σ (|Fixed Cost| + |Var Cost| × pct/100) / (Consolidated CM% / 100)`;
+    } else if(CURRENT_FORM === 'C'){
+      consCM_str = `(Revenue − COGS − |Variable Cost|) / Revenue × 100`;
+      consBEP_str = `(Total Cost − COGS) / (Consolidated GP% / 100)`;
+    } else {
+      consCM_str = `(Revenue − COGS − |Variable Cost|) / Revenue × 100`;
+      consBEP_str = `Σ |Fixed Cost| / (Consolidated CM% / 100)`;
+    }
+    consBox.innerHTML = `
+      <div class="fhead">📐 Consolidated Formulas — Scenario ${CURRENT_FORM === 'A' ? '2' : CURRENT_FORM === 'B' ? '3' : '1'}</div>
+      <div class="fline"><span class="fkey">Total Revenue</span><span>= Σ (Revenue of all business units)</span></div>
+      <div class="fline"><span class="fkey">Total BEP</span><span>= ${consBEP_str}  ·  When P&L = 0,Revenue of BEP</span></div>
+      <div class="fline"><span class="fkey">Total Cost</span><span>= |COGS| + |Fixed Cost| + |Variable Cost| + |Other (if negative)|</span></div>
+      <div class="fline"><span class="fkey">GP1</span><span>= Revenue − COGS</span></div>
+      <div class="fline"><span class="fkey">GP%</span><span>= (GP1 / Revenue) × 100  ·  Gross Profit</span></div>
+      <div class="fline"><span class="fkey">P&L (Calc)</span><span>= GP1 - Fixed Cost - Variable Cost - Other Expenses</span></div>
+      <div class="fline"><span class="fkey">CM%</span><span>= ${consCM_str}</span></div>
+    `;
+  }
+  
+  const sumBox = document.getElementById('summaryFormulaBox');
+  if(sumBox){
+    let cmF, bepF;
+    if(CURRENT_FORM === 'B'){
+      cmF = `(Revenue − COGS − Var × (1 − pct/100)) / Revenue × 100  ·  per-unit pct`;
+      bepF = `(|Fixed Cost| + |Var Cost| × pct/100) / (CM% / 100)  ·  per-unit pct`;
+    } else if(CURRENT_FORM === 'C'){
+      cmF = `(Revenue − COGS − |Variable Cost|) / Revenue × 100`;
+      bepF = `(Total Cost − COGS) / (GP% / 100)`;
+    } else {
+      cmF = `(Revenue − COGS − |Variable Cost|) / Revenue × 100`;
+      bepF = `|Fixed Cost| / (CM% / 100)`;
+    }
+    sumBox.innerHTML = `
+      <div class="fhead"> Summary Table Formulas — Scenario ${CURRENT_FORM === 'A' ? '2' : CURRENT_FORM === 'B' ? '3' : '1'}</div>
+      <div class="fline"><span class="fkey">GP%</span><span>= Average (GP1 / Revenue) across all months with Revenue &gt; 0</span></div>
+      <div class="fline"><span class="fkey">CM%</span><span>= ${cmF}</span></div>
+      <div class="fline"><span class="fkey">BEP</span><span>= ${bepF}  ·  When P&L = 0,Revenue of BEP  ·  When CM% ≤ 0, BEP = N/A</span></div>
+      <div class="fline"><span class="fkey">Gap %</span><span>= (Revenue − BEP) / BEP × 100  (negative = below BEP)</span></div>
+      <div class="fline"><span class="fkey">Month P&L=0</span><span>OLS regression on P&L history; find x where y crosses 0. Exact month = interpolation between consecutive months.</span></div>
+    `;
+  }
+}
+
+// ===== TAB SWITCHING =====
+document.querySelectorAll('.tab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tc').forEach(c=>c.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+  });
+});
+
+// ===== KPIs =====
+function renderKPIs(){
+  const bus=Object.entries(BD); 
+  const total=bus.length;
+  const avgPnl=bus.reduce((s,[_,d])=>s+d.latestPnlCalc,0)/total;
+  const improving=bus.filter(([_,d])=>d.improving).length;
+  const willBE=bus.filter(([_,d])=>d.beMonth).length;
+  
+  const kpis=[
+    {l:'Business Units',v:total,s:'Active units tracked',ac:'#D4AF37'},
+    {l:'Avg Monthly P&L (Calc)',v:avgPnl.toFixed(1)+'M',s:'Across all units (Aug-26)',ac:'#D45A68'},
+    {l:'Potential Businesses',v:improving+'/'+total,s:'Based on 3-month comparison',ac:'#E0C158'},
+    {l:'Projected to Hit BEP',v:willBE+'/'+total,s:'Within 6-months projection',ac:'#4CB07A'}
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi" style="--ac:${k.ac}"><div class="kpi-l">${k.l}</div><div class="kpi-v">${k.v}</div><div class="kpi-s">${k.s}</div></div>
+  `).join('');
+}
+
+// ===== TIMELINE CHART =====
+let timelineChartInstance = null;
+function renderTimeline(){
+  const ctx=document.getElementById('timelineChart');
+  if(timelineChartInstance) timelineChartInstance.destroy();
+  const bus=Object.entries(BD);
+  const colors=['#D4AF37','#B23A48','#4CB07A','#5B8FC0','#A67C52','#2F7A78','#9B59B6'];
+  const ds=bus.map(([bu,d],i)=>({
+    label:bu,data:d.allPnlCalc,
+    borderColor:colors[i%7],backgroundColor:colors[i%7]+'20',
+    borderWidth:2.5,tension:.3,fill:false,
+    pointRadius:d.allPnlCalc.map((_,j)=>j===d.beIdx?7:2),
+    pointBackgroundColor:d.allPnlCalc.map((v,j)=>j===d.beIdx?'#FAF6EC':(v>=0?colors[i%7]:colors[i%7]+'80')),
+    pointBorderColor:colors[i%7]
+  }));
+  timelineChartInstance = new Chart(ctx,{
+    type:'line',data:{labels:ALL_M,datasets:ds},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{color:'#C9CFDC',font:{size:10},usePointStyle:true,pointStyle:'circle',padding:14}},
+        tooltip:{backgroundColor:'rgba(11,14,20,.97)',borderColor:'rgba(212,175,55,.4)',borderWidth:1,titleColor:'#FAF6EC',bodyColor:'#C9CFDC',padding:12},
+        annotation:{annotations:{
+          zero:{type:'line',yMin:0,yMax:0,borderColor:'rgba(200,210,230,.35)',borderWidth:1.2,borderDash:[],
+  label:{display:true,content:'P&L = 0 (Breakeven)',position:'start',color:'#9AA3B8',font:{size:9,weight:'500'},backgroundColor:'rgba(11,14,20,.6)',padding:4,borderColor:'rgba(200,210,230,.2)',borderWidth:1,borderRadius:4}},
+          proj:{type:'box',xMin:NH-.5,xMax:ALL_M.length-.5,backgroundColor:'rgba(212,175,55,.05)',borderColor:'rgba(212,175,55,.25)',borderWidth:1,borderDash:[4,4]}
+        }}
+      },
+      scales:{
+        x:{grid:{color:'rgba(212,175,55,.06)'},ticks:{color:'#9AA3B8',font:{size:9}}},
+        y:{grid:{color:'rgba(212,175,55,.08)'},ticks:{color:'#9AA3B8',font:{size:10},callback:v=>v.toFixed(0)+'M'},
+          title:{display:true,text:'P&L (Million MMK)',color:'#9AA3B8',font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ===== PERCENT AXIS =====
+function computePercentAxis(d){
+  const leftVals = [
+    ...d.allRev,
+    ...d.allBep.filter(v => v !== null),
+    ...d.allTotalCost,
+    ...d.allPnlCalc,
+    ...d.allVarAbs,
+    ...d.allFixAbs,
+    ...d.allGp1,
+    ...d.allCogs,
+    ...d.allPnlDB.filter(v => v !== null)
+  ];
+  let leftMin = Math.min(0, ...leftVals);
+  let leftMax = Math.max(0, ...leftVals);
+  const leftRange = leftMax - leftMin;
+  leftMin = leftMin - leftRange * 0.05;
+  leftMax = leftMax + leftRange * 0.08;
+
+  const allPct = [...d.allCM, ...d.allGPpct].filter(v => v !== null && v !== undefined && isFinite(v));
+  const dataMin = allPct.length ? Math.min(...allPct) : -10;
+  const dataMax = allPct.length ? Math.max(...allPct) : 50;
+
+  let pctMax = Math.max(100, Math.ceil((dataMax + 10) / 10) * 10);
+  let pctMin = dataMin < -50 ? Math.floor((dataMin - 10) / 10) * 10 : -50;
+
+  const pctRange = pctMax - pctMin;
+  let step = 10;
+  if(pctRange > 200) step = 50;
+  else if(pctRange > 100) step = 25;
+  else if(pctRange <= 60) step = 10;
+
+  pctMin = Math.floor(pctMin / step) * step;
+
+  return { leftMin, leftMax, pctMin, pctMax, step };
+}
+
+// ===== CONSOLIDATED CHART =====
+let consChartInstance = null;
+let consLegendState = {};
+
+function renderConsolidated(){
+  const ctx = document.getElementById('consolidatedChart');
+  if(consChartInstance) consChartInstance.destroy();
+  const n = ALL_M.length;
+  const rc = ALL_M.map((_,i)=>i<NH?'#22D3EE':'#0E7490');
+
+  const fakeD = {
+    allRev: CONS.rev, allBep: CONS.bep, allTotalCost: CONS.totalCost,
+    allPnlCalc: CONS.pnlCalc, allVarAbs: CONS.varAbs, allFixAbs: CONS.fixAbs,
+    allGp1: CONS.gp1, allCogs: CONS.cogs, allPnlDB: CONS.pnlDB,
+    allCM: CONS.cm, allGPpct: CONS.gppct
+  };
+  const axes = computePercentAxis(fakeD);
+  
+  const datasets = [
+    { type: 'bar', label: 'BEP Amount', data: CONS.bep,
+      backgroundColor: ALL_M.map((_,i)=> i<NH ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.7)'),
+      borderColor: ALL_M.map((_,i)=> i<NH ? 'rgba(212,175,55,1)' : 'rgba(212,175,55,0.85)'),
+      borderWidth: 1.5, borderRadius: {topLeft:3, topRight:3, bottomLeft:3, bottomRight:3},
+      order: 6, barPercentage: 0.45, categoryPercentage: 0.85, yAxisID: 'y',
+      datalabels: { display: true, align: 'top', anchor: 'end', clamp: true,
+        color: '#EFD98A', font: { size: 9, weight: 'bold' },
+        formatter: v => v != null ? v.toFixed(0) + 'M' : '' } },
+    { type: 'bar', label: 'Revenue', data: CONS.rev,
+      backgroundColor: rc.map(c=>c+'dd'), borderColor: rc, borderWidth: 1.5,
+      borderRadius: {topLeft:3, topRight:3, bottomLeft:3, bottomRight:3},
+      order: 5, barPercentage: 0.45, categoryPercentage: 0.85, yAxisID: 'y',
+      datalabels: { display: true, align: 'top', anchor: 'end', clamp: true,
+        color: '#22D3EE', font: { size: 9, weight: 'bold' },
+        formatter: v => (v != null && v !== 0) ? v.toFixed(0) + 'M' : '' } },
+    { type: 'line', label: 'Total Cost', data: CONS.totalCost,
+      borderColor: '#B23A48', borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#B23A48',
+      tension: 0.3, order: 3, yAxisID: 'y', fill: false },
+    { type: 'line', label: 'P&L (Calc)', data: CONS.pnlCalc,
+      borderColor: '#4CB07A', borderWidth: 3,
+      pointRadius: CONS.pnlCalc.map((_,i)=> i === CONS.beIdx ? 8 : 3),
+      pointBackgroundColor: CONS.pnlCalc.map(v=> v>=0 ? '#4CB07A' : '#D45A68'),
+      pointBorderColor: '#FAF6EC', pointBorderWidth: 1.5,
+      tension: 0.3, order: 3, yAxisID: 'y', fill: false },
+    { type: 'line', label: 'COGS', data: CONS.cogs,
+      borderColor: '#F59E0B', borderWidth: 2.5, pointRadius: 2, pointBackgroundColor: '#F59E0B',
+      tension: 0.3, order: 4, yAxisID: 'y', fill: false },
+    { type: 'line', label: 'GP1', data: CONS.gp1,
+      borderColor: '#2F7A78', borderWidth: 2, pointRadius: 2, pointBackgroundColor: '#2F7A78',
+      tension: 0.3, order: 4, yAxisID: 'y', fill: false },
+    { type: 'line', label: 'P&L (DB)', data: CONS.pnlDB,
+      borderColor: '#E0C158', borderWidth: 2, borderDash: [4,4],
+      pointRadius: 3, pointBackgroundColor: '#E0C158',
+      tension: 0.3, order: 3, yAxisID: 'y', spanGaps: false, fill: false },
+    { type: 'line', label: 'Variable Cost (abs)', data: CONS.varAbs,
+      borderColor: '#A67C52', borderWidth: 1.5, pointRadius: 1, pointBackgroundColor: '#A67C52',
+      tension: 0.3, order: 5, yAxisID: 'y', fill: false },
+    { type: 'line', label: 'Fixed Cost (abs)', data: CONS.fixAbs,
+      borderColor: '#8B5CF6', borderWidth: 2, pointRadius: 1, pointBackgroundColor: '#8B5CF6',
+      tension: 0.3, order: 5, yAxisID: 'y', fill: false },
+    { type: 'line', label: 'GP%', data: CONS.gppct,
+      borderColor: '#EFD98A', borderWidth: 3, borderDash: [6, 4],
+      pointRadius: 4, pointBackgroundColor: '#EFD98A',
+      pointBorderColor: '#8B6F2E', pointBorderWidth: 1,
+      tension: 0.3, order: 2, yAxisID: 'y1', fill: false,
+      datalabels: { display: true, align: 'bottom', clamp: true,
+        color: '#8B6F2E', font: { size: 8, weight: 'bold' },
+        backgroundColor: 'rgba(239,217,138,.95)', borderRadius: 4,
+        padding: { top: 2, bottom: 2, left: 4, right: 4 },
+        formatter: ctx => ctx.parsed.y !== null ? ctx.parsed.y.toFixed(0) + '%' : '' } },
+    { type: 'line', label: 'CM%', data: CONS.cm,
+      borderColor: '#5B8FC0', borderWidth: 2.5, borderDash: [6, 4],
+      pointRadius: 4, pointBackgroundColor: '#5B8FC0',
+      pointBorderColor: '#FAF6EC', pointBorderWidth: 1,
+      tension: 0.3, order: 2, yAxisID: 'y1', fill: false,
+      datalabels: { display: true, align: 'top', clamp: true,
+        color: '#FAF6EC', font: { size: 8, weight: 'bold' },
+        backgroundColor: 'rgba(11,14,20,.9)', borderRadius: 4,
+        padding: { top: 2, bottom: 2, left: 5, right: 5 },
+        borderColor: 'rgba(91,143,192,.6)', borderWidth: 1,
+        formatter: ctx => ctx.parsed.y !== null ? ctx.parsed.y.toFixed(0) + '%' : '' } }
+  ];
+
+  const defaultVisible = [0, 1, 2, 3];
+
+  if (Object.keys(consLegendState).length === 0) {
+    datasets.forEach((ds, i) => {
+      consLegendState[i] = !defaultVisible.includes(i);
+    });
+  }
+  datasets.forEach((ds, i) => {
+    ds.hidden = consLegendState[i] || false;
+  });
+
+  consChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: ALL_M, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: 'rgba(11,14,20,.97)', borderColor: 'rgba(212,175,55,.4)', borderWidth: 1,
+          titleColor: '#FAF6EC', bodyColor: '#C9CFDC', padding: 12,
+          callbacks: { label: function(context) {
+            let val = context.parsed.y;
+            if (val === null || val === undefined) return null;
+            if (context.dataset.yAxisID === 'y1') return `${context.dataset.label}: ${val.toFixed(1)}%`;
+            return `${context.dataset.label}: ${val.toFixed(1)}M`;
+          }}
+        },
+        annotation: { annotations: {
+          zero: { type: 'line', yMin: 0, yMax: 0, borderColor: 'rgba(200,210,230,.3)', borderWidth: 1.2, borderDash: [] },
+          proj: { type: 'box', xMin: NH - 0.5, xMax: n - 0.5,
+            backgroundColor: 'rgba(212,175,55,.04)', borderColor: 'rgba(212,175,55,.25)',
+            borderWidth: 1, borderDash: [4, 4],
+            label: { display: true, content: '6M Forecast', position: 'start', color: '#D4AF37',
+              font: { size: 9, weight: 'bold' }, backgroundColor: 'rgba(11,14,20,.85)', padding: 4, borderRadius: 4 } }
+        }}
+      },
+      scales: {
+        x: { grid: { color: 'rgba(212,175,55,.06)' }, ticks: { color: '#9AA3B8', font: { size: 9 }, maxRotation: 45 } },
+        y: { position: 'left', min: axes.leftMin, max: axes.leftMax,
+          grid: { color: 'rgba(212,175,55,.08)' },
+          ticks: { color: '#9AA3B8', font: { size: 10 }, callback: v => v.toFixed(0) + 'M' },
+          title: { display: true, text: 'Million MMK (Amount)', color: '#9AA3B8', font: { size: 10 } } },
+        y1: { position: 'right', min: axes.pctMin, max: axes.pctMax,
+          grid: { drawOnChartArea: false },
+          ticks: { color: '#EFD98A', font: { size: 9, weight: '600' }, callback: v => v + '%', stepSize: axes.step },
+          title: { display: true, text: 'GP% / CM %', color: '#EFD98A', font: { size: 9, weight: '600' } } }
+      }
+    }
+  });
+
+  renderConsolidatedLegend(datasets);
+}
+
+function renderConsolidatedLegend(datasets){
+  let legendContainer = document.getElementById('consLegendContainer');
+  if (!legendContainer) {
+    legendContainer = document.createElement('div');
+    legendContainer.id = 'consLegendContainer';
+    legendContainer.className = 'toggle-bar';
+    legendContainer.style.cssText = 'margin-top:12px;margin-bottom:0;';
+    const chartDiv = document.querySelector('#consolidatedChart').parentElement;
+    chartDiv.parentElement.insertBefore(legendContainer, chartDiv.nextSibling);
+  }
+
+  const colorMap = {
+    'BEP Amount': '#D4AF37',
+    'Revenue': '#22D3EE',
+    'Total Cost': '#B23A48',
+    'P&L (Calc)': '#4CB07A',
+    'COGS': '#F59E0B',
+    'GP1': '#2F7A78',
+    'P&L (DB)': '#E0C158',
+    'Variable Cost (abs)': '#A67C52',
+    'Fixed Cost (abs)': '#8B5CF6',
+    'GP%': '#EFD98A',
+    'CM%': '#5B8FC0'
+  };
+
+  legendContainer.innerHTML = datasets.map((ds, i) => {
+    const isHidden = ds.hidden || false;
+    return `<button class="toggle-btn ${isHidden ? 'off' : ''}" data-ds="${i}">
+      <span class="tdot" style="background:${colorMap[ds.label] || '#888'}"></span>${ds.label}
+    </button>`;
+  }).join('');
+
+  legendContainer.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.ds);
+      if (!consChartInstance) return;
+      const meta = consChartInstance.getDatasetMeta(idx);
+      meta.hidden = !meta.hidden;
+      consLegendState[idx] = meta.hidden;
+      btn.classList.toggle('off', meta.hidden);
+      consChartInstance.update();
+    });
+  });
+}
+
+// ===== BUSINESS CARDS =====
+let charts={};
+function renderCards(filter='all'){
+  const grid=document.getElementById('businessGrid');
+  grid.innerHTML='';
+  Object.values(charts).forEach(c=>c.destroy());
+  charts={};
+  
+  let bus=Object.entries(BD);
+  if(filter==='neg') bus=bus.filter(([_,d])=>d.latestPnlCalc<-5);
+  else if(filter==='improving') bus=bus.filter(([_,d])=>d.improving);
+  else if(filter==='nearbe') bus=bus.filter(([_,d])=>d.latestPnlCalc>-10);
+  
+  bus.forEach(([bu,d])=>{
+    const card=document.createElement('div');
+    card.className='bcard';
+    const st=d.latestPnlCalc<-10?'sn':d.latestPnlCalc<0?'sb':'sp';
+    const stxt=d.latestPnlCalc<-10?'DEEP LOSS':d.latestPnlCalc<0?'LOSS':'PROFIT';
+    const beInfo=d.beMonth
+      ? (d.beIdx<NH?`Achieved in <strong>${d.beMonth}</strong>`:`Projected: <strong>${d.beMonth}</strong> (Month ${d.beIdx-NH+1} of proj)`)
+      : '<strong style="color:var(--ruby-light)">Not within 6-month projection</strong>';
+    
+    const cardId=bu.replace(/[^a-zA-Z0-9]/g,'');
+    const latestCM = d.allCM[NH-1];
+    const latestCMStr = latestCM !== null ? latestCM.toFixed(1)+'%' : 'N/A';
+    const latestGP = d.allGPpct[NH-1];
+    const latestGPStr = latestGP !== null ? latestGP.toFixed(1)+'%' : 'N/A';
+    
+    const varPctVal = d.varPctVal;
+    
+    let bepFormula, cmFormula;
+    if(CURRENT_FORM === 'B'){
+      bepFormula = `(|Fixed Cost| + |Var Cost| × ${varPctVal}/100) / (CM% / 100)`;
+      cmFormula = `(Revenue − COGS − Var × (1 − ${varPctVal}/100)) / Revenue × 100`;
+    } else if(CURRENT_FORM === 'C'){
+      bepFormula = `(Total Cost − COGS) / (GP% / 100)`;
+      cmFormula = `(Revenue − COGS − |Var|) / Revenue × 100`;
+    } else {
+      bepFormula = `|Fixed Cost| / (CM% / 100)`;
+      cmFormula = `(Revenue − COGS − |Var|) / Revenue × 100`;
+    }
+    
+    const varCostRow = (CURRENT_FORM === 'B') ? `
+      <div class="varcost-row">
+        <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;">⚙️ Var Cost Adjustment:</span>
+        <input type="number" class="varcost-input" data-bu="${bu}" value="${varPctVal}" min="0" max="99" step="1">
+        <span style="font-size:12px;font-weight:700;">%</span>
+        <span style="font-size:10px;color:var(--ink-300);font-weight:400;">→ Fixed Cost side · CM% uses Var × (1 − pct/100)</span>
+      </div>
+    ` : '';
+    
+    card.innerHTML=`
+      <div class="bcard-h"><div><div class="bname">${bu}</div><div class="binfo">${beInfo}</div></div>
+        <div class="bstatus ${st}">${stxt}</div></div>
+      ${varCostRow}
+      <div class="toggle-bar" id="tbar-${cardId}">
+        <button class="toggle-btn" data-ds="0"><span class="tdot" style="background:#D4AF37"></span>BEP</button>
+        <button class="toggle-btn" data-ds="1"><span class="tdot" style="background:#22D3EE"></span>Revenue</button>
+        <button class="toggle-btn" data-ds="2"><span class="tdot" style="background:#B23A48"></span>Total Cost</button>
+        <button class="toggle-btn" data-ds="3"><span class="tdot" style="background:#4CB07A"></span>P&L (Calc)</button>
+        <button class="toggle-btn off" data-ds="4"><span class="tdot" style="background:#F59E0B"></span>COGS</button>
+        <button class="toggle-btn off" data-ds="5"><span class="tdot" style="background:#2F7A78"></span>GP1</button>
+        <button class="toggle-btn off" data-ds="6"><span class="tdot" style="background:#E0C158"></span>P&L (DB)</button>
+        <button class="toggle-btn off" data-ds="7"><span class="tdot" style="background:#A67C52"></span>Var Cost</button>
+        <button class="toggle-btn off" data-ds="8"><span class="tdot" style="background:#8B5CF6"></span>Fix Cost</button>
+        <button class="toggle-btn off" data-ds="9"><span class="tdot" style="background:#EFD98A"></span>GP%</button>
+        <button class="toggle-btn off" data-ds="10"><span class="tdot" style="background:#5B8FC0"></span>CM%</button>
+      </div>
+      <div class="cbox"><canvas id="ch-${cardId}"></canvas></div>
+      <div class="mstats">
+        <div class="ms"><div class="ms-l">Latest Rev</div><div class="ms-v" style="color:#EAD9A8">${d.latestRev.toFixed(1)}M</div></div>
+        <div class="ms"><div class="ms-l">Latest P&L (Calc)</div><div class="ms-v neg">${d.latestPnlCalc.toFixed(1)}M</div></div>
+        <div class="ms"><div class="ms-l">Latest GP%</div><div class="ms-v" style="color:#EFD98A">${latestGPStr}</div></div>
+        <div class="ms"><div class="ms-l">Latest CM%</div><div class="ms-v" style="color:#5B8FC0">${latestCMStr}</div></div>
+        <div class="ms"><div class="ms-l">Gap to BEP</div><div class="ms-v neg">${d.gapPct.toFixed(2)} x</div></div>
+      </div>
+      <div class="formula-box">
+        <div class="fhead">📐 ${bu} — Formulas (Scenario ${CURRENT_FORM === 'A' ? '2' : CURRENT_FORM === 'B' ? '3' : '1'})</div>
+        <div class="fline"><span class="fkey">GP1</span><span>= Revenue − COGS</span></div>
+        <div class="fline"><span class="fkey">GP%</span><span>= (GP1 / Revenue) × 100  ·  Gross Profit</span></div>
+        <div class="fline"><span class="fkey">P&L (Calc)</span><span>= GP1 - Fixed Cost - Variable Cost - Other Expenses</span></div>
+        <div class="fline"><span class="fkey">BEP</span><span>= ${bepFormula}  ·  When P&L = 0,Revenue of BEP</span></div>
+        <div class="fline"><span class="fkey">CM%</span><span>= ${cmFormula}</span></div>
+        <div class="fline"><span class="fkey">Note</span><span>When CM% ≤ 0, breakeven not achievable (BEP = N/A)</span></div>
+        <div class="fline"><span class="fkey">Projection</span><span>OLS regression on 8 months actual · projected Sep-26 → Feb-27</span></div>
+      </div>`;
+    grid.appendChild(card);
+    setTimeout(()=>{
+      makeChart(bu,d);
+      const tbar=document.getElementById(`tbar-${cardId}`);
+      if(tbar){
+        tbar.querySelectorAll('.toggle-btn').forEach(btn=>{
+          btn.addEventListener('click',()=>{
+            const chart=charts[bu]; if(!chart) return;
+            const idx=parseInt(btn.dataset.ds);
+            const meta=chart.getDatasetMeta(idx);
+            meta.hidden=!meta.hidden;
+            btn.classList.toggle('off',meta.hidden);
+            chart.update();
+          });
+        });
+      }
+      
+      const varInput = card.querySelector('.varcost-input');
+      if (varInput) {
+        // Store the business unit name for the closure
+        const buName = bu;
+        
+        varInput.addEventListener('input', (e) => {
+          let v = parseFloat(e.target.value);
+          if (isNaN(v)) v = 0;
+          v = Math.max(0, Math.min(99, v));
+          VAR_PCT_MAP[buName] = v;
+          
+          // Debounce the heavy re-render to avoid losing focus
+          clearTimeout(window._varDebounce);
+          window._varDebounce = setTimeout(() => {
+            // Remember which input was focused
+            window._lastFocusedVarBu = buName;
+            
+            rebuildAllData();
+            renderTable();
+            renderTimeline();
+            renderConsolidated();
+            renderCards(document.querySelector('.fbtn.active')?.dataset.f || 'all');
+            renderPnLTab();
+            
+            // Restore focus after the new cards are rendered
+            // Use a small timeout to ensure DOM is ready
+            setTimeout(() => {
+              const newInput = document.querySelector(`.varcost-input[data-bu="${buName}"]`);
+              if (newInput) {
+                newInput.focus();
+                // Move cursor to the end
+                newInput.setSelectionRange(newInput.value.length, newInput.value.length);
+              }
+            }, 50);
+          }, 500); // 500ms debounce
+        });
+      }
+    },30);
+  });
+}
+
+function makeChart(bu,d){
+  const id='ch-'+bu.replace(/[^a-zA-Z0-9]/g,'');
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  const rc=ALL_M.map((_,i)=>i<NH?'#22D3EE':'#0E7490');
+  const pnlDBData=d.allPnlDB.map(v=>v);
+  
+  const axes = computePercentAxis(d);
+  
+  const ch=new Chart(ctx,{
+    type:'bar',
+    data:{labels:ALL_M,datasets:[
+      { type:'bar', label:'BEP', data:d.allBep,
+        backgroundColor:ALL_M.map((_,i)=> i<NH ? 'rgba(212,175,55,0.9)' : 'rgba(212,175,55,0.7)'),
+        borderColor:ALL_M.map((_,i)=> i<NH ? 'rgba(212,175,55,1)' : 'rgba(212,175,55,0.85)'),
+        borderWidth:1.5, borderRadius:{topLeft:3,topRight:3,bottomLeft:3,bottomRight:3},
+        order:6, barPercentage:0.45, categoryPercentage:0.85, yAxisID:'y', hidden:false,
+        datalabels:{ display: true, align: 'top', anchor: 'end', clamp: true,
+          color: '#EFD98A', font: { size: 8, weight: 'bold' },
+          formatter: v => v != null ? v.toFixed(0) + 'M' : '' } },
+      { type:'bar', label:'Revenue', data:d.allRev,
+        backgroundColor:rc.map(c=>c+'dd'), borderColor:rc, borderWidth:1.5,
+        borderRadius:{topLeft:3,topRight:3,bottomLeft:3,bottomRight:3},
+        order:5, barPercentage:0.45, categoryPercentage:0.85, yAxisID:'y', hidden:false,
+        datalabels:{ display: true, align: 'top', anchor: 'end', clamp: true,
+          color: '#22D3EE', font: { size: 8, weight: 'bold' },
+          formatter: v => (v != null && v !== 0) ? v.toFixed(0) + 'M' : '' } },
+      { type:'line', label:'Total Cost', data:d.allTotalCost,
+        borderColor:'#B23A48', borderWidth:2.5, pointRadius:2, pointBackgroundColor:'#B23A48',
+        tension:.3, order:3, yAxisID:'y', fill:false, hidden:false },
+      { type:'line', label:'P&L (Calc)', data:d.allPnlCalc,
+        borderColor:'#4CB07A', borderWidth:2.5,
+        pointRadius:d.allPnlCalc.map((_,i)=>i===d.beIdx?6:2),
+        pointBackgroundColor:d.allPnlCalc.map(v=>v>=0?'#4CB07A':'#D45A68'),
+        tension:.3, order:3, yAxisID:'y', hidden:false },
+      { type:'line', label:'COGS', data:d.allCogs,
+        borderColor:'#F59E0B', borderWidth:2.5, pointRadius:2, pointBackgroundColor:'#F59E0B',
+        tension:.3, order:3, yAxisID:'y', fill:false, hidden:true },
+      { type:'line', label:'GP1', data:d.allGp1,
+        borderColor:'#2F7A78', borderWidth:2, pointRadius:2, pointBackgroundColor:'#2F7A78',
+        tension:.3, order:3, yAxisID:'y', fill:false, hidden:true },
+      { type:'line', label:'P&L (DB)', data:pnlDBData,
+        borderColor:'#E0C158', borderWidth:2, borderDash:[4,4],
+        pointRadius:3, pointBackgroundColor:'#E0C158',
+        tension:.3, order:3, yAxisID:'y', spanGaps:false, hidden:true },
+      { type:'line', label:'Var Cost', data:d.allVarAbs,
+        borderColor:'#A67C52', borderWidth:1.5, pointRadius:1, pointBackgroundColor:'#A67C52',
+        tension:.3, order:4, yAxisID:'y', hidden:true },
+      { type:'line', label:'Fix Cost', data:d.allFixAbs,
+        borderColor:'#8B5CF6', borderWidth:2, pointRadius:1, pointBackgroundColor:'#8B5CF6',
+        tension:.3, order:4, yAxisID:'y', hidden:true },
+      { type:'line', label:'GP%', data:d.allGPpct,
+        borderColor:'#EFD98A', borderWidth:3, borderDash:[6,4],
+        pointRadius:4, pointBackgroundColor:'#EFD98A',
+        pointBorderColor:'#8B6F2E', pointBorderWidth:1,
+        tension:.3, order:2, yAxisID:'y1', fill:false, hidden:true,
+        datalabels:{ display:true, align:'bottom', clamp:true,
+          color:'#8B6F2E', font:{size:8,weight:'bold'},
+          backgroundColor:'rgba(239,217,138,.95)', borderRadius:4,
+          padding:{top:2,bottom:2,left:4,right:4},
+          formatter:ctx=>ctx.parsed.y!==null?ctx.parsed.y.toFixed(0)+'%':'' } },
+      { type:'line', label:'CM%', data:d.allCM,
+        borderColor:'#5B8FC0', borderWidth:2.5, borderDash:[6,4],
+        pointRadius:4, pointBackgroundColor:'#5B8FC0',
+        pointBorderColor:'#FAF6EC', pointBorderWidth:1,
+        tension:.3, order:0, yAxisID:'y1', fill:false, hidden:true,
+        datalabels:{ display:true, align:'top', clamp:true,
+          color:'#FAF6EC', font:{size:8,weight:'bold'},
+          backgroundColor:'rgba(11,14,20,.9)', borderRadius:4,
+          padding:{top:2,bottom:2,left:5,right:5},
+          borderColor:'rgba(91,143,192,.6)', borderWidth:1,
+          formatter:ctx=>ctx.parsed.y!==null?ctx.parsed.y.toFixed(0)+'%':'' } }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{ backgroundColor:'rgba(11,14,20,.97)', borderColor:'rgba(212,175,55,.4)', borderWidth:1,
+          titleColor:'#FAF6EC', bodyColor:'#C9CFDC', padding:12,
+          callbacks:{ label:c=>{
+            if(c.parsed.y===null) return null;
+            if(c.dataset.yAxisID==='y1') return `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`;
+            return `${c.dataset.label}: ${c.parsed.y.toFixed(1)}M`;
+          }} },
+        annotation:{ annotations:{
+    zero:{ type:'line', yMin:0, yMax:0, borderColor:'rgba(200,210,230,.3)', borderWidth:1.2, borderDash:[] },
+    pz:{ type:'box', xMin:NH-.5, xMax:ALL_M.length-.5,
+    backgroundColor:'rgba(212,175,55,.06)', borderColor:'rgba(212,175,55,.3)',
+    borderWidth:1, borderDash:[4,4],
+    label:{ display:true, content:'6M Forecast', position:'start',
+      color:'#D4AF37', font:{size:9,weight:'bold'},
+      backgroundColor:'rgba(11,14,20,.85)', padding:4, borderRadius:4 } }
+  }}
+      },
+      scales:{
+        x:{ grid:{color:'rgba(212,175,55,.06)'}, ticks:{color:'#9AA3B8',font:{size:8},maxRotation:45} },
+        y:{ position:'left', min:axes.leftMin, max:axes.leftMax,
+          grid:{color:'rgba(212,175,55,.08)'},
+          ticks:{color:'#9AA3B8',font:{size:9},callback:v=>v.toFixed(0)+'M'},
+          title:{display:true,text:'MMK (Millions) — Amount',color:'#9AA3B8',font:{size:9}} },
+        y1:{ position:'right', min:axes.pctMin, max:axes.pctMax,
+          grid:{drawOnChartArea:false},
+          ticks:{color:'#EFD98A',font:{size:9,weight:'600'},callback:v=>v+'%',stepSize:axes.step},
+          title:{display:true,text:'GP% / CM %',color:'#EFD98A',font:{size:9,weight:'600'}} }
+      }
+    }
+  });
+  charts[bu]=ch;
+}
+
+// ===== SUMMARY TABLE =====
+function renderTable(){
+  document.getElementById('sBody').innerHTML=Object.entries(BD).map(([bu,d])=>{
+    const gapC=d.gapPct>=0?'pos':'neg';
+    let beTxt,beC;
+    if(!d.beMonth){beTxt='Not in 6M window';beC='neg';}
+    else if(d.beIdx<NH){beTxt=`✓ ${d.beMonth} (already)`;beC='pos';}
+    else{const m=d.beIdx-NH+1;beTxt=`→ ${d.beMonth} (in ${m} mo)`;beC='neu';}
+    const st=d.latestPnlCalc<-10?'<span class="neg">● Deep Loss</span>':d.latestPnlCalc<0?'<span class="neu">● Loss</span>':'<span class="pos">● Profit</span>';
+    const bepVal = d.latestBep && d.latestBep > 0 ? d.latestBep : 0;
+    const pct = bepVal > 0 ? Math.min(100,Math.max(0,(d.latestRev/bepVal)*100)) : 0;
+    const pc=pct>=100?'#4CB07A':pct>=50?'#D4AF37':'#B23A48';
+    const bepStr = d.latestBep !== null ? d.latestBep.toFixed(1)+'M' : 'N/A';
+    return `<tr><td><strong style="color:#EAD9A8">${bu}</strong></td><td>${(d.gp*100).toFixed(1)}%</td>
+      <td class="neg">${d.latestPnlCalc.toFixed(2)}M</td>
+      <td class="${d.latestPnlDB>=0?'pos':'neg'}">${d.latestPnlDB.toFixed(2)}M</td>
+      <td style="color:#E0C158">${bepStr}</td>
+      <td><span class="${gapC}">${d.gapPct.toFixed(0)}%</span><div class="pbar"><div class="pfill" style="width:${pct}%;background:${pc}"></div></div></td>
+      <td class="${beC}"><strong>${beTxt}</strong></td><td>${st}</td></tr>`;
+  }).join('');
+}
+
+document.querySelectorAll('.fbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderCards(b.dataset.f);
+  });
+});
+
+// ===== PROFIT TARGET FORECAST =====
+function findMonthForTarget(pnlHistory, target){
+  const {slope, intercept} = ols(pnlHistory);
+  if(slope <= 0) return null;
+  const xZero = (target - intercept) / slope;
+  if(xZero < 1 || xZero > 100) return null;
+  const monthIdx = Math.ceil(xZero) - 1;
+  const monthsFromNow = monthIdx - CURRENT_MONTH_IDX;
+  if(monthIdx >= ALL_M.length){
+    return { monthLabel: '~' + Math.ceil(xZero) + ' months from Jan-26', beyond: true, xZero, monthsFromNow };
+  }
+  return { monthLabel: ALL_M[monthIdx], idx: monthIdx, beyond: false, xZero, monthsFromNow };
+}
+
+function runTargetForecast(){
+  const target = parseFloat(document.getElementById('targetInput').value);
+  if(isNaN(target)){
+    document.getElementById('targetResults').innerHTML = '<div class="target-result neg">Please enter a valid number.</div>';
+    return;
+  }
+  const results = [];
+  Object.entries(BD).forEach(([bu,d])=>{
+    const r = findMonthForTarget(d.allPnlCalc, target);
+    results.push({bu, r});
+  });
+  renderTargetResults(results, target);
+}
+
+function renderTargetResults(results, target){
+  const el = document.getElementById('targetResults');
+  el.innerHTML = results.map(({bu, r})=>{
+    if(r){
+      const cls = r.beyond ? 'neutral' : 'pos';
+      const monthsAway = r.monthsFromNow;
+      let monthsLabel = '';
+      if(monthsAway <= 0){ monthsLabel = ' (already reached)'; }
+      else if(monthsAway === 1){ monthsLabel = ' (~1 month from now)'; }
+      else { monthsLabel = ` (~${monthsAway} months from now)`; }
+      const label = r.beyond 
+        ? `Beyond 6M window — approx. ${monthsLabel}` 
+        : `✓ ${r.monthLabel}${monthsLabel}`;
+      return `<div style="display:flex;gap:14px;align-items:center;padding:10px 16px;background:rgba(26,31,43,.6);border:1px solid rgba(212,175,55,.18);border-radius:10px;">
+        <div style="min-width:180px;font-weight:600;color:#EAD9A8;font-family:'Cormorant Garamond',serif;font-size:16px;">${bu}</div>
+        <div style="font-size:11px;color:var(--ink-300);">reaches <strong style="color:#EFD98A">${target}M</strong> monthly profit in</div>
+        <div class="target-result ${cls}" style="font-size:15px;padding:5px 14px;">${label}</div>
+      </div>`;
+    } else {
+      return `<div style="display:flex;gap:14px;align-items:center;padding:10px 16px;background:rgba(26,31,43,.6);border:1px solid rgba(212,175,55,.18);border-radius:10px;">
+        <div style="min-width:180px;font-weight:600;color:#EAD9A8;font-family:'Cormorant Garamond',serif;font-size:16px;">${bu}</div>
+        <div style="font-size:11px;color:var(--ink-300);">cannot reach <strong style="color:#EFD98A">${target}M</strong> monthly profit on current trend</div>
+        <div class="target-result neg" style="font-size:14px;padding:5px 14px;">✗ Not reachable</div>
+      </div>`;
+    }
+  }).join('');
+}
+
+// ===== P&L CALCULATION TAB =====
+let pCharts={};
+function renderPnLTab(){
+  const bus=Object.entries(BD);
+  const totalCur=bus.reduce((s,[_,d])=>s+d.latestPnlCalc,0);
+  const totalProj=bus.reduce((s,[_,d])=>s+d.pnlCalcP[5],0);
+  const improving=bus.filter(([_,d])=>d.improving).length;
+  const willBE=bus.filter(([_,d])=>d.beMonth).length;
+  
+  document.getElementById('pnlSummary').innerHTML=`
+    <div class="scard"><div class="sc-l">Total P&L (Aug-26)</div><div class="sc-v neg">${totalCur.toFixed(1)}M</div></div>
+    <div class="scard"><div class="sc-l">Projected P&L (Feb-27)</div><div class="sc-v ${totalProj>=0?'pos':'neg'}">${totalProj.toFixed(1)}M</div></div>
+    <div class="scard"><div class="sc-l">Units Improving</div><div class="sc-v" style="color:#E0C158">${improving}/${bus.length}</div></div>
+    <div class="scard"><div class="sc-l">Hit P&L=0 in 6M</div><div class="sc-v" style="color:#4CB07A">${willBE}/${bus.length}</div></div>`;
+  
+  const cont=document.getElementById('pnlCards');
+  cont.innerHTML='';
+  
+  bus.forEach(([bu,d])=>{
+    const card=document.createElement('div');
+    card.className='pcard';
+    
+    let rows='';
+    ALL_M.forEach((m,i)=>{
+      const rev=d.allRev[i],cogs=d.allCogs[i],gp=d.allGp1[i];
+      const fx=d.allFix[i],vr=d.allVar[i],ot=d.allOth[i],pnl=d.allPnlCalc[i];
+      const pnlDB=d.allPnlDB[i];
+      const gpPct = rev>0 ? (gp/rev*100) : null;
+      const isProj=i>=NH,isBE=i===d.beIdx;
+      let rc='';if(isProj)rc='proj';if(isBE)rc='be';
+      const pc=pnl>=0?'pos':'neg';
+      const ml=isProj?m+' *':m;
+      const pnlDBStr=pnlDB!==null?pnlDB.toFixed(2):'—';
+      const gpStr=gpPct!==null?gpPct.toFixed(1)+'%':'—';
+      rows+=`<tr class="${rc}"><td>${ml}</td><td>${rev.toFixed(2)}</td><td>${cogs.toFixed(2)}</td>
+        <td style="color:#4CB07A">${gp.toFixed(2)}</td><td style="color:#EFD98A">${gpStr}</td>
+        <td style="color:#EAD9A8">${fx.toFixed(2)}</td>
+        <td style="color:#A67C52">${vr.toFixed(2)}</td><td>${ot.toFixed(3)}</td>
+        <td class="${pc}">${pnl>=0?'+':''}${pnl.toFixed(2)}</td>
+        <td style="color:#E0C158">${pnlDBStr}</td></tr>`;
+    });
+    
+    let beAlert='';
+    if(d.beExact){
+      const monthsAway=d.beExact.idx-(NH-1);
+      const label=monthsAway<=0?'Already achieved':`~${monthsAway} month${monthsAway>1?'s':''} from now`;
+      beAlert=`<div class="bealert ok"><strong>★ P&L Breakeven:</strong> Between ${d.beExact.from} (${d.allPnlCalc[Math.floor(d.beExact.idx)].toFixed(2)}M) and ${d.beExact.to} (${d.allPnlCalc[Math.ceil(d.beExact.idx)].toFixed(2)}M) — <strong>${label}</strong></div>`;
+    } else if(d.beMonth){
+      beAlert=`<div class="bealert ok"><strong>★ P&L Breakeven:</strong> ${d.beMonth}</div>`;
+    } else {
+      const {slope,intercept}=d.reg.pnl;
+      if(slope>0 && d.latestPnlCalc<0){
+        const xToZero=-intercept/slope;
+        const monthsToZero=xToZero-NH;
+        if(monthsToZero>0 && monthsToZero<24){
+          beAlert=`<div class="bealert info"><strong>⏳ P&L = 0 projected:</strong> ~${monthsToZero.toFixed(1)} months from now (beyond 6M window).</div>`;
+        } else {
+          beAlert=`<div class="bealert warn"><strong>✗ P&L does not reach zero</strong> within reasonable projection. Slope: ${slope.toFixed(2)}M/month.</div>`;
+        }
+      } else if(slope<=0){
+        beAlert=`<div class="bealert warn"><strong>✗ P&L worsening</strong> — slope: ${slope.toFixed(2)}M/month.</div>`;
+      } else {
+        beAlert=`<div class="bealert warn"><strong>✗ Not reaching zero</strong> within projection window.</div>`;
+      }
+    }
+    
+    const r=d.reg;
+    const cardId=bu.replace(/[^a-zA-Z0-9]/g,'');
+    const varPctVal = d.varPctVal;
+    
+    let bepF;
+    if(CURRENT_FORM === 'C') bepF = '(Total Cost − COGS) / (GP% / 100)';
+    else if(CURRENT_FORM === 'B') bepF = `(|Fixed Cost| + |Var Cost| × ${varPctVal}/100) / (CM% / 100)`;
+    else bepF = '|Fixed Cost| / (CM% / 100)';
+    
+    card.innerHTML=`
+      <div class="pcard-h"><div><div class="ptitle">${bu}</div>
+        <div class="psub">Actual + Projected · Gross Profit: ${(d.gp*100).toFixed(1)}%</div></div></div>
+      <div class="fbox"><div class="fi">ƒ</div><div>
+        <strong>P&L</strong> = GP1 - Fixed Cost - Variable Cost - Other Expenses<br>
+        <span style="color:var(--ink-300);font-size:10px">GP1 = Revenue − COGS · GP% = GP1/Revenue × 100 · BEP = ${bepF} · All components projected via OLS regression on 8 months actual data</span>
+      </div></div>
+      <table class="ctbl"><thead><tr>
+        <th>Month</th><th>Revenue</th><th>COGS</th><th>GP1</th><th>GP%</th><th>Fixed Cost</th><th>Variable Cost</th><th>Other</th><th>P&L (Calc)</th><th>P&L (DB)</th>
+      </tr></thead><tbody>${rows}</tbody></table>
+      <div style="font-size:10px;color:var(--ink-300);margin-bottom:10px">* Projected months · ★ Breakeven month (P&L ≥ 0) · DB P&L only available for historical months</div>
+      ${beAlert}
+      <div class="rbox"><div class="rtitle">OLS Regression (8 months actual)</div>
+        <div class="rgrid">
+          <div class="ritem"><div class="ri-l">Revenue</div><div class="ri-v">y=${r.rev.slope.toFixed(2)}x+${r.rev.intercept.toFixed(1)}</div><div class="ri-s">R²=${r.rev.r2.toFixed(3)} ${r.rev.slope>=0?'↑':'↓'}</div></div>
+          <div class="ritem"><div class="ri-l">GP1</div><div class="ri-v">y=${r.gp1.slope.toFixed(2)}x+${r.gp1.intercept.toFixed(1)}</div><div class="ri-s">R²=${r.gp1.r2.toFixed(3)} ${r.gp1.slope>=0?'↑':'↓'}</div></div>
+          <div class="ritem"><div class="ri-l">Fixed Cost</div><div class="ri-v">y=${r.fix.slope.toFixed(2)}x+${r.fix.intercept.toFixed(1)}</div><div class="ri-s">R²=${r.fix.r2.toFixed(3)}</div></div>
+          <div class="ritem"><div class="ri-l">Variable Cost</div><div class="ri-v">y=${r.var.slope.toFixed(2)}x+${r.var.intercept.toFixed(1)}</div><div class="ri-s">R²=${r.var.r2.toFixed(3)}</div></div>
+          <div class="ritem"><div class="ri-l">Other Income</div><div class="ri-v">y=${r.oth.slope.toFixed(2)}x+${r.oth.intercept.toFixed(1)}</div><div class="ri-s">R²=${r.oth.r2.toFixed(3)}</div></div>
+          <div class="ritem"><div class="ri-l">P&L (Overall)</div><div class="ri-v">y=${r.pnl.slope.toFixed(2)}x+${r.pnl.intercept.toFixed(1)}</div><div class="ri-s">R²=${r.pnl.r2.toFixed(3)} ${r.pnl.slope>=0?'↑ Improving':'↓ Worsening'}</div></div>
+        </div>
+      </div>
+      <div class="formula-box">
+        <div class="fhead"> ${bu} — Calculation Formulas (Scenario ${CURRENT_FORM === 'A' ? '2' : CURRENT_FORM === 'B' ? '3' : '1'})</div>
+        <div class="fline"><span class="fkey">GP1</span><span>= Revenue − COGS</span></div>
+        <div class="fline"><span class="fkey">GP%</span><span>= (GP1 / Revenue) × 100  ·  Gross Profit</span></div>
+        <div class="fline"><span class="fkey">CM%</span><span>= ${CURRENT_FORM === 'B' ? `(Revenue − COGS − Var × (1 − ${varPctVal}/100)) / Revenue × 100` : '(Revenue − COGS − |Var|) / Revenue × 100'}</span></div>
+        <div class="fline"><span class="fkey">BEP</span><span>= ${bepF}  ·  When P&L = 0,Revenue of BEP  ·  When CM% ≤ 0, BEP = N/A</span></div>
+        <div class="fline"><span class="fkey">P&L (Calc)</span><span>= GP1 - Fixed Cost - Variable Cost - Other Expenses</span></div>
+        <div class="fline"><span class="fkey">OLS</span><span>y = slope·x + intercept, where x = month number (1..8). R² = goodness of fit.</span></div>
+        <div class="fline"><span class="fkey">Projection</span><span>Apply regression equation at x = 9..14 to project Sep-26 → Feb-27</span></div>
+      </div>
+      <div class="pchart"><canvas id="pch-${cardId}"></canvas></div>`;
+    cont.appendChild(card);
+    setTimeout(()=>{
+      makePnLChart(bu,d);
+    },30);
+  });
+}
+
+function makePnLChart(bu,d){
+  const id='pch-'+bu.replace(/[^a-zA-Z0-9]/g,'');
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  const ch=new Chart(ctx,{
+    type:'line',
+    data:{labels:ALL_M,datasets:[
+      {label:'Revenue',data:d.allRev,borderColor:'#22D3EE',borderWidth:2.5,tension:.3,fill:false,pointRadius:1,hidden:false,yAxisID:'y'},
+      {label:'Total Cost',data:d.allTotalCost,borderColor:'#B23A48',backgroundColor:'rgba(178,58,72,.1)',borderWidth:2,borderDash:[4,3],tension:.3,fill:true,pointRadius:1,hidden:false,yAxisID:'y'},
+      {label:'P&L (Calc)',data:d.allPnlCalc,borderColor:'#D4AF37',borderWidth:3,tension:.3,
+        pointRadius:d.allPnlCalc.map((_,i)=>i===d.beIdx?7:2),
+        pointBackgroundColor:d.allPnlCalc.map((v,i)=>i===d.beIdx?'#FAF6EC':(v>=0?'#4CB07A':'#D45A68')),
+        pointBorderColor:'#D4AF37',fill:false,hidden:false,yAxisID:'y'},
+      {label:'GP1',data:d.allGp1,borderColor:'#2F7A78',backgroundColor:'rgba(47,122,120,.12)',borderWidth:2,tension:.3,fill:true,pointRadius:1,hidden:true,yAxisID:'y'},
+      {label:'COGS',data:d.allCogs,borderColor:'#F59E0B',borderWidth:2,tension:.3,fill:false,pointRadius:1,hidden:true,yAxisID:'y'},
+      {label:'GP%',data:d.allGPpct,borderColor:'#EFD98A',borderWidth:2.5,borderDash:[6,4],
+        tension:.3,fill:false,pointRadius:3,pointBackgroundColor:'#EFD98A',hidden:true,yAxisID:'y1'},
+      {label:'P&L (DB)',data:d.allPnlDB,borderColor:'#E0C158',borderWidth:2,borderDash:[3,3],tension:.3,
+        pointRadius:3,pointBackgroundColor:'#E0C158',spanGaps:false,fill:false,hidden:true,yAxisID:'y'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{color:'#C9CFDC',font:{size:9},usePointStyle:true,padding:10}},
+        tooltip:{backgroundColor:'rgba(11,14,20,.97)',borderColor:'rgba(212,175,55,.4)',borderWidth:1,titleColor:'#FAF6EC',bodyColor:'#C9CFDC',padding:12,
+          callbacks:{label:c=>{
+            if(c.parsed.y===null) return null;
+            if(c.dataset.yAxisID==='y1') return `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`;
+            return `${c.dataset.label}: ${c.parsed.y.toFixed(2)}M`;
+          }}},
+        annotation:{annotations:{
+          zl:{type:'line',yMin:0,yMax:0,borderColor:'rgba(200,210,230,.3)',borderWidth:1.2,borderDash:[]},
+          pz:{type:'box',xMin:NH-.5,xMax:ALL_M.length-.5,backgroundColor:'rgba(212,175,55,.05)',borderColor:'rgba(212,175,55,.25)',borderWidth:1,borderDash:[4,4],
+            label:{display:true,content:'Projection',position:'start',color:'#D4AF37',font:{size:8,weight:'bold'},backgroundColor:'rgba(11,14,20,.85)',padding:4,borderRadius:4}}
+        }}
+      },
+      scales:{
+        x:{grid:{color:'rgba(212,175,55,.06)'},ticks:{color:'#9AA3B8',font:{size:8},maxRotation:45}},
+        y:{position:'left',grid:{color:'rgba(212,175,55,.08)'},ticks:{color:'#9AA3B8',font:{size:9},callback:v=>v.toFixed(0)+'M'},
+          title:{display:true,text:'Million MMK (Amount)',color:'#9AA3B8',font:{size:9}}},
+        y1:{position:'right',min:-50,max:100,grid:{drawOnChartArea:false},
+          ticks:{color:'#EFD98A',font:{size:9,weight:'600'},callback:v=>v+'%',stepSize:25},
+          title:{display:true,text:'GP %',color:'#EFD98A',font:{size:9,weight:'600'}}}
+      }
+    }
+  });
+  pCharts[bu]=ch;
+}
+
+// ===== FORM SWITCHER LOGIC =====
+function setForm(form){
+  CURRENT_FORM = form;
+  rebuildAllData();
+  
+  document.querySelectorAll('.form-btn').forEach(btn=>{
+    if(btn.dataset.form === form){
+      btn.style.background = 'linear-gradient(135deg,#B8943F,#D4AF37)';
+      btn.style.color = '#0B0E14';
+      btn.style.fontWeight = '700';
+      btn.style.border = '0';
+    } else {
+      btn.style.background = 'rgba(26,31,43,.7)';
+      btn.style.color = 'var(--ink-100)';
+      btn.style.fontWeight = '600';
+      btn.style.border = '1px solid rgba(212,175,55,.2)';
+    }
+  });
+  
+  const hint = document.getElementById('formHint');
+  if(form === 'B'){
+    hint.style.display = 'block';
+    hint.textContent = `Scenario 3: Each business has its own Var% input · Added to Fixed Cost · Var × (1 − pct/100) in CM%`;
+  } else if(form === 'C'){
+    hint.style.display = 'block';
+    hint.textContent = 'Scenario 1: BEP = (Total Cost − COGS) / (GP% / 100)  ·  CM% unchanged';
+  } else {
+    hint.style.display = 'none';
+  }
+  
+  consLegendState = {};
+  
+  updateFormulaBoxes();
+  renderKPIs();
+  renderTimeline();
+  renderConsolidated();
+  renderTable();
+  renderCards('all');
+  renderPnLTab();
+}
+
+document.querySelectorAll('.form-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    setForm(btn.dataset.form);
+  });
+});
+
+// ===== INIT =====
+(async function initDashboard() {
+  try {
+    await loadDashboardData();
+    rebuildAllData();
+    updateFormulaBoxes();
+    renderKPIs();
+    renderCards();
+    renderTimeline();
+    renderConsolidated();
+    renderTable();
+    renderPnLTab();
+    setForm('A');
+  } catch (err) {
+    console.error(err);
+    document.body.insertAdjacentHTML(
+      'afterbegin',
+      `<div style="background:#5c1d24;color:#FAF6EC;padding:12px 18px;border-radius:8px;margin-bottom:16px;font-size:12px;">
+        ⚠️ Could not load <strong>data.json</strong> (${err.message}). Run via local/GitHub server, not file://.
+      </div>`
+    );
+  }
+})();
+</script>
+</body>
+</html>

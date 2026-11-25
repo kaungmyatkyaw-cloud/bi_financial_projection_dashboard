@@ -4,7 +4,6 @@ import pandas as pd
 from sshtunnel import SSHTunnelForwarder
 import pymysql
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 # 1. Load Configurations & Setup Paths
@@ -25,16 +24,24 @@ MYSQL_DB = "analytic_db"
 MYSQL_USER = "bi_admin"
 MYSQL_PW = "kaungmyat@BI2026"
 
-# Mapping database categories to frontend JSON keys
+# Mapping database categories (normalized to spaces) to frontend JSON keys
 CATEGORY_MAPPING = {
-    "Revenue": "rev",
-    "COGS": "cogs",
-    "GP1": "gp1",
-    "Fixed_Cost": "fixed",
-    "Variable_Cost": "variable",
-    "Other_inc &exp": "other",
-    "PNL": "pnlDB"
+    "revenue": "rev",
+    "cogs": "cogs",
+    "gp 1": "gp1",
+    "gp1": "gp1",
+    "fixed cost": "fixed",
+    "variable cost": "variable",
+    "other income & expenses": "other",
+    "other inc&exp": "other",
+    "other inc &exp": "other",
+    "profit or loss": "pnlDB",
+    "pnl": "pnlDB",
 }
+
+def normalize_category(val: str) -> str:
+    # Convert underscores to spaces, collapse multiple spaces, and lowercase
+    return " ".join(str(val).replace("_", " ").split()).lower()
 
 print("Establishing SSH Tunnel to MySQL Server...")
 tunnel = SSHTunnelForwarder(
@@ -45,7 +52,7 @@ tunnel = SSHTunnelForwarder(
 )
 with tunnel:
     print(f"SSH Tunnel established. Local bind port: {tunnel.local_bind_port}")
-    
+
     connection = pymysql.connect(
         host='127.0.0.1',
         port=tunnel.local_bind_port,
@@ -54,30 +61,36 @@ with tunnel:
         database=MYSQL_DB,
         cursorclass=pymysql.cursors.DictCursor
     )
-    
+
     try:
         with connection.cursor() as cursor:
             # A. Dynamically get all distinct historical months, sorted
             cursor.execute(f"""
-                SELECT DISTINCT financial_date 
-                FROM {TARGET_TABLE} 
+                SELECT DISTINCT financial_date
+                FROM {TARGET_TABLE}
                 ORDER BY financial_date ASC
             """)
             dates_result = cursor.fetchall()
-            
+
             if not dates_result:
                 raise ValueError("No data found in the database.")
-            
-            # Format as ['Jan-26', 'Feb-26', ...]
-            months_h = [pd.to_datetime(row['financial_date']).strftime('%b-%y') for row in dates_result]
-            
+
+            # Preserve chronological order without duplicate 'Mon-YY' labels
+            months_h = []
+            seen_months = set()
+            for row in dates_result:
+                label = pd.to_datetime(row['financial_date']).strftime('%b-%y')
+                if label not in seen_months:
+                    seen_months.add(label)
+                    months_h.append(label)
+
             # B. Dynamically generate the next 6 months for MONTHS_P
             last_date = pd.to_datetime(dates_result[-1]['financial_date'])
             months_p = []
             for i in range(1, 7):
                 next_month = last_date + relativedelta(months=i)
                 months_p.append(next_month.strftime('%b-%y'))
-            
+
             current_month_idx = len(months_h)
             print(f"Detected Historical Months ({len(months_h)}): {months_h}")
             print(f"Generated Projection Months (6): {months_p}")
@@ -86,27 +99,45 @@ with tunnel:
             cursor.execute(f"SELECT financial_date, category, business_unit, amount FROM {TARGET_TABLE}")
             rows = cursor.fetchall()
             df = pd.DataFrame(rows)
-            
-            # Format dates to match 'Mon-YY'
-            df['financial_date'] = pd.to_datetime(df['financial_date']).dt.strftime('%b-%y')
-            df['category'] = df['category'].astype(str).str.strip()
+
+            if df.empty:
+                raise ValueError("No rows returned from financial table.")
+
+            # Format dates to match 'Mon-YY' and normalize text fields
+            df['month_label'] = pd.to_datetime(df['financial_date']).dt.strftime('%b-%y')
+            df['category_norm'] = df['category'].apply(normalize_category)
             df['business_unit'] = df['business_unit'].astype(str).str.strip()
-            
+            df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0.0)
+            # df['amount'] ကို numeric ပြောင်းပြီးနောက် Million MMK (1e6) သို့ ပြောင်းခြင်း
+            df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0.0) / 1_000_000.0
+
+            # Debug check: print distinct normalized categories found in DB
+            print("Distinct normalized categories in DB:", sorted(df['category_norm'].unique()))
+
             # D. Build the RAW data structure aligned to months_h
             raw_data = {}
-            for bu in df['business_unit'].unique():
+            for bu in sorted(df['business_unit'].unique()):
                 bu_df = df[df['business_unit'] == bu]
                 raw_data[bu] = {
-                    "rev": [], "cogs": [], "gp1": [], "fixed": [], 
-                    "variable": [], "other": [], "pnlDB": []
+                    "rev": [0.0] * len(months_h),
+                    "cogs": [0.0] * len(months_h),
+                    "gp1": [0.0] * len(months_h),
+                    "fixed": [0.0] * len(months_h),
+                    "variable": [0.0] * len(months_h),
+                    "other": [0.0] * len(months_h),
+                    "pnlDB": [0.0] * len(months_h)
                 }
-                
-                for db_cat, json_key in CATEGORY_MAPPING.items():
-                    cat_df = bu_df[bu_df['category'] == db_cat]
-                    month_amounts = dict(zip(cat_df['financial_date'], cat_df['amount']))
-                    
-                    # Align to the dynamically generated historical months
-                    aligned_data = [float(month_amounts.get(month, 0.0)) for month in months_h]
+
+                for cat_norm, json_key in CATEGORY_MAPPING.items():
+                    cat_df = bu_df[bu_df['category_norm'] == cat_norm]
+                    if cat_df.empty:
+                        continue
+
+                    month_sums = cat_df.groupby('month_label')['amount'].sum().to_dict()
+                    aligned_data = [
+                        round(raw_data[bu][json_key][idx] + float(month_sums.get(month, 0.0)), 2)
+                        for idx, month in enumerate(months_h)
+                    ]
                     raw_data[bu][json_key] = aligned_data
 
             # E. Compile final JSON payload
@@ -121,9 +152,9 @@ with tunnel:
             output_file = "data.json"
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(output_payload, f, indent=2)
-                
+
             print(f"✅ Successfully exported dynamic data to {output_file}")
-            
+
     except Exception as e:
         print(f"❌ Error occurred during DB operation: {e}")
         raise e
